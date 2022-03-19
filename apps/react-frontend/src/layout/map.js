@@ -20,6 +20,7 @@ import MapCountryTooltip from '../components/tooltips/mapcountrytooltip';
 import ExchangeLayer from '../components/layers/exchangelayer';
 import SolarLayer from '../components/layers/solarlayer';
 import WindLayer from '../components/layers/windlayer';
+import DataCenterLayer from '../components/layers/datacenterlayer';
 
 const debouncedReleaseMoving = debounce(() => { dispatchApplication('isMovingMap', false); }, 200);
 
@@ -206,9 +207,11 @@ export default () => {
         viewport={viewport}
         zones={zones}
       >
+        <MapLayer component={DataCenterLayer} />
         <MapLayer component={ExchangeLayer} />
         <MapLayer component={WindLayer} />
         <MapLayer component={SolarLayer} />
+        
       </ZoneMap>
     </React.Fragment>
   );

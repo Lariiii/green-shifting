@@ -81,69 +81,123 @@ const Main = ({
     isClientVersionOutdated = isNewClientVersion(clientVersion);
   }
 
-  return (
-    <React.Fragment>
-      <div
-        style={{
-          position: 'fixed', /* This is done in order to ensure that dragging will not affect the body */
-          width: '100vw',
-          height: 'inherit',
-          display: 'flex',
-          flexDirection: 'column', /* children will be stacked vertically */
-          alignItems: 'stretch', /* force children to take 100% width */
-        }}
-      >
-        {headerVisible && <Header />}
-        <div id="inner">
-          <ErrorBoundary>
-          <LoadingOverlay visible={showLoadingOverlay} />
-          <LeftPanel />
-            <MapContainer pathname={location.pathname} id="map-container">
-              <Map />
-              <Legend />
-              <div className="controls-container">
-                <Toggle
-                  infoHTML={__('tooltips.cpinfo')}
-                  onChange={value => dispatchApplication('electricityMixMode', value)}
-                  options={[
-                    { value: 'production', label: __('tooltips.production') },
-                    { value: 'consumption', label: __('tooltips.consumption') },
-                  ]}
-                  value={electricityMixMode}
-                />
-              </div>
-              <LayerButtons />
-            </MapContainer>
-          </ErrorBoundary>
+//   return (
+//     <React.Fragment>
+//       <div
+//         style={{
+//           position: 'fixed', /* This is done in order to ensure that dragging will not affect the body */
+//           width: '100vw',
+//           height: 'inherit',
+//           display: 'flex',
+//           flexDirection: 'column', /* children will be stacked vertically */
+//           alignItems: 'stretch', /* force children to take 100% width */
+//         }}
+//       >
+//         {headerVisible && <Header />}
+//         <div id="inner">
+//           <ErrorBoundary>
+//           <LoadingOverlay visible={showLoadingOverlay} />
+//           <LeftPanel />
+//             <MapContainer pathname={location.pathname} id="map-container">
+//               <Map />
+//               <Legend />
+//               <div className="controls-container">
+//                 <Toggle
+//                   infoHTML={__('tooltips.cpinfo')}
+//                   onChange={value => dispatchApplication('electricityMixMode', value)}
+//                   options={[
+//                     { value: 'production', label: __('tooltips.production') },
+//                     { value: 'consumption', label: __('tooltips.consumption') },
+//                   ]}
+//                   value={electricityMixMode}
+//                 />
+//               </div>
+//               <LayerButtons />
+//             </MapContainer>
+//           </ErrorBoundary>
 
-          <div id="connection-warning" className={`flash-message ${hasConnectionWarning ? 'active' : ''}`}>
-            <div className="inner">
-              {__('misc.oops')}
-              {' '}
-              <a
-                href=""
-                onClick={(e) => {
-                  dispatch({ type: 'GRID_DATA_FETCH_REQUESTED', payload: { datetime } });
-                  e.preventDefault();
-                }}
-              >
-                {__('misc.retrynow')}
-              </a>
-              .
-            </div>
-          </div>
-          <div id="new-version" className={`flash-message ${isClientVersionOutdated ? 'active' : ''}`}>
-            <div className="inner">
-              <span dangerouslySetInnerHTML={{ __html: __('misc.newversion') }} />
-            </div>
-          </div>
+//           <div id="connection-warning" className={`flash-message ${hasConnectionWarning ? 'active' : ''}`}>
+//             <div className="inner">
+//               {__('misc.oops')}
+//               {' '}
+//               <a
+//                 href=""
+//                 onClick={(e) => {
+//                   dispatch({ type: 'GRID_DATA_FETCH_REQUESTED', payload: { datetime } });
+//                   e.preventDefault();
+//                 }}
+//               >
+//                 {__('misc.retrynow')}
+//               </a>
+//               .
+//             </div>
+//           </div>
+//           <div id="new-version" className={`flash-message ${isClientVersionOutdated ? 'active' : ''}`}>
+//             <div className="inner">
+//               <span dangerouslySetInnerHTML={{ __html: __('misc.newversion') }} />
+//             </div>
+//           </div>
 
-          { /* end #inner */}
+//           { /* end #inner */}
+//         </div>
+//         <Tabs />
+//       </div>
+//     </React.Fragment>
+//   );
+// };
+
+return (
+  <React.Fragment>
+    <div
+      style={{
+        position: 'fixed', /* This is done in order to ensure that dragging will not affect the body */
+        width: '100vw',
+        height: 'inherit',
+        display: 'flex',
+        flexDirection: 'column', /* children will be stacked vertically */
+        alignItems: 'stretch', /* force children to take 100% width */
+      }}
+    >
+      {headerVisible && <Header />}
+      <div id="inner">
+        <ErrorBoundary>
+        <LoadingOverlay visible={showLoadingOverlay} />
+        <LeftPanel />
+          <MapContainer pathname={location.pathname} id="map-container">
+            <Map />
+            <Legend />
+            <LayerButtons />
+          </MapContainer>
+        </ErrorBoundary>
+
+        <div id="connection-warning" className={`flash-message ${hasConnectionWarning ? 'active' : ''}`}>
+          <div className="inner">
+            {__('misc.oops')}
+            {' '}
+            <a
+              href=""
+              onClick={(e) => {
+                dispatch({ type: 'GRID_DATA_FETCH_REQUESTED', payload: { datetime } });
+                e.preventDefault();
+              }}
+            >
+              {__('misc.retrynow')}
+            </a>
+            .
+          </div>
         </div>
-        <Tabs />
+        <div id="new-version" className={`flash-message ${isClientVersionOutdated ? 'active' : ''}`}>
+          <div className="inner">
+            <span dangerouslySetInnerHTML={{ __html: __('misc.newversion') }} />
+          </div>
+        </div>
+
+        { /* end #inner */}
       </div>
-    </React.Fragment>
-  );
+      <Tabs />
+    </div>
+  </React.Fragment>
+);
 };
 
 export default connect(mapStateToProps)(Main);

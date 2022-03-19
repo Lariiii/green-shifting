@@ -36,10 +36,10 @@ export function useInterpolatedWindData() {
       const datetime = moment(customDatetime || new Date());
       const k = (datetime - tBefore) / (tAfter - tBefore);
 
-      if (datetime > tAfter) {
-        console.error('Error while interpolating wind because current time is out of bounds');
-        return null;
-      }
+      // if (datetime > tAfter) {
+      //   console.error('Error while interpolating wind because current time is out of bounds');
+      //   return null;
+      // }
 
       console.log(`#1 wind forecast target ${tBefore.fromNow()} made ${getRefTime(gribs1[0]).fromNow()}`);
       console.log(`#2 wind forecast target ${tAfter.fromNow()} made ${getRefTime(gribs2[0]).fromNow()}`);
@@ -71,10 +71,10 @@ export function useInterpolatedSolarData() {
       const datetime = moment(customDatetime || new Date());
       const k = (datetime - tBefore) / (tAfter - tBefore);
 
-      if (datetime > tAfter) {
-        console.error('Error while interpolating solar because current time is out of bounds');
-        return null;
-      }
+      // if (datetime > tAfter) {
+      //   console.error('Error while interpolating solar because current time is out of bounds');
+      //   return null;
+      // }
 
       console.log(`#1 solar forecast target ${tBefore.fromNow()} made ${getRefTime(grib1).fromNow()}`);
       console.log(`#2 solar forecast target ${tAfter.fromNow()} made ${getRefTime(grib2).fromNow()}`);

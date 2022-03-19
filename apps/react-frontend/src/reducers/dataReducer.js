@@ -53,6 +53,11 @@ const initialDataState = {
   wind: null,
   solarDataError: null,
   windDataError: null,
+  dataCenters: [
+    { 'lat': 52.39213929283949, 'lon': 13.124911168035899 },
+    { 'lat': -12.062866, 'lon': -77.033793 },
+    { 'lat': 65.582530, 'lon': 22.158004 }
+  ],
 };
 
 const reducer = (state = initialDataState, action) => {
