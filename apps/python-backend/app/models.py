@@ -8,3 +8,39 @@ class Position:
         """
         self.latitude = latitude
         self.longitude = longitude
+
+    def __str__(self) -> str:
+        return f"lat={self.latitude} lon={self.longitude}"
+
+
+class Datacenter:
+    def __init__(self,
+                 name: str,
+                 company: str,
+                 position: Position,
+                 windpower_kwh: int,
+                 solarpower_kwh: int,
+                 datacenter_vm_count_0: int):
+
+        self.name = name
+        self.company = company
+        self.position = position
+        self.windpower_kwh = windpower_kwh
+        self.solarpower_kwh = solarpower_kwh
+        self.datacenter_vm_count_0 = datacenter_vm_count_0
+
+        # Soll Werte in der Zukunft
+        self.datacenter_vm_count_1 = -1
+        self.datacenter_vm_count_2 = -1
+        self.datacenter_vm_count_3 = -1
+
+        # Wetter Daten 24h
+        self.environment = None
+
+    def __str__(self) -> str:
+        return (f'DC: {self.name}:' if self.name is not None else '') + \
+               (f' datacenter_vm_count_0={self.datacenter_vm_count_0} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_1={self.datacenter_vm_count_1} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_2={self.datacenter_vm_count_2} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_3={self.datacenter_vm_count_3} VMs' if self.datacenter_vm_count_0 is not None else '')
+

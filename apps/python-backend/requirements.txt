@@ -2,3 +2,8 @@ psycopg2-binary
 requests
 typing
 wait-for-it
+flask
+flask-cors
+flask-socketio
+simple-websocket
+geopy

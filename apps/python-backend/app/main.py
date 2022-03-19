@@ -1,31 +1,21 @@
 #!/usr/bin/python3
-"""
-aircontrol ewfs blinds api
-Control your Warema EWFS blinds via 433.92 MHz protocol and aircontrol backend
-See: https://github.com/rfkd/aircontrol
-"""
-import os
-import glob
-import logging
-from os import path
-from io import BytesIO
 
-from flask import Flask, send_from_directory #, render_template
+import copy
+import logging
+import math
+import time
+from datetime import datetime
+
+from flask import Flask  # , render_template
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
-import gphoto2 as gp
-from PIL import Image, ImageOps
-
+from models import Position, Datacenter
+from openweathermap import request_one_call_timemachine_api
+from utils import unix_timestamp_to_datetime_str
+from algorithm_test import shift
 
 BASE_URL = 'http://127.0.0.1:5000'
-IMAGE_DIRECTORY = 'tmp'
-IMAGE_SIZE = 1000
-
-
-logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
-gp.check_result(gp.use_python_logging())
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -35,73 +25,118 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
-
-@app.route(f"/{ IMAGE_DIRECTORY }/<path:path>")
-def serve_images(path):
-    return send_from_directory(IMAGE_DIRECTORY, path)
-
-# @app.route('/')
-# def home():
-#     return render_template('index.html')
-
-# @app.route('/enpoint/<int:id>', methods=['POST'])
-# def endpoint(id):
-#     return ('', 200)
-
-# @socketio.on('message')
-# def handle_message(data):
-#     print('received message: ' + data)
-
-# @socketio.on('json')
-# def handle_json(json):
-#     print('received json: ' + str(json))
+datacenters: list[Datacenter] = []
+data_points_length = 0
 
 
 @socketio.event
-def get_cameras(json):
-    cameras = gp.Camera.autodetect()
-    cameras_json = { name: value for (name, value) in cameras }
-    emit('cameras', cameras_json, broadcast=True)
+def create_datacenters(datacenter_json):
+    # JSON Format
+    example_json = {"name": "",
+                    "company": "",
+                    "longitude": 0,
+                    "latitude": 0,
+                    "windpower_kwh": 0,
+                    "solarpower_kwh": 0,
+                    "datacenter_vm_count_0": 1000}
+
+    datacenter = Datacenter(name=datacenter_json["name"],
+                            company=datacenter_json["company"],
+                            position=Position(latitude=datacenter_json["latitude"], longitude=datacenter_json["longitude"]),
+                            windpower_kwh=datacenter_json["windpower_kwh"],
+                            solarpower_kwh=datacenter_json["solarpower_kwh"],
+                            datacenter_vm_count_0=datacenter_json["datacenter_vm_count_0"])
+
+    global datacenters
+    global data_points_length
+
+    # Request Today
+    now = datetime.today()
+    now.replace(minute=0, second=0)
+    unix_now = math.floor(time.mktime(now.timetuple()))
+
+    # Call Mirko API
+    environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
+    data_points_length = len(environment_data)
+    datacenter.environment = environment_data
+    datacenters.append(datacenter)
+
 
 @socketio.event
-def get_latest_images(json):
-    count = json['count']
-    list_of_files = glob.glob(f"{ IMAGE_DIRECTORY }/*.jpg")
-    sorted_list = sorted(list_of_files, key=os.path.getctime, reverse=True)[:count]
-    urls = [ path.join(BASE_URL, target) for target in sorted_list ]
-    emit('latest_images', urls, broadcast=True)
-    return urls
+def begin_datastream():
+    global datacenters, data_points_length
 
-@socketio.event
-def capture():
-    try:
-        camera = gp.Camera()
-        camera.init()
+    def get_total_vm_cap(datacenter_obj, index):
+        VM_KWH_CONSUMPTION = 1
+        wind_kwh = datacenter_obj.windpower_kwh * datacenter_obj.environment[index].wind_efficiency
+        solar_kwh = datacenter_obj.solarpower_kwh * datacenter_obj.environment[index].solar_efficiency
 
-        # Capture image
-        file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+        return math.floor((wind_kwh + solar_kwh) / VM_KWH_CONSUMPTION)
 
-        # Creating file name 
-        target = path.join(IMAGE_DIRECTORY, file_path.name.lower())
-        
-        # Loading image from camera and shrinking to IMAGE_SIZE 
-        camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-        with BytesIO(camera_file.get_data_and_size()) as file:
-            img = Image.open(file)
-            img.thumbnail(size=(IMAGE_SIZE, IMAGE_SIZE))
-            transposed_img = ImageOps.exif_transpose(img)
-            transposed_img.save(target)
+    for i in range(data_points_length - 3):
+        time.sleep(1)
+        timestamp = unix_timestamp_to_datetime_str(datacenters[0].environment[i].unix_timestamp)
+        print("\n--- New Hour {} ---".format(timestamp))
 
-        # Emit new image url
-        emit('new_image', path.join(BASE_URL, target), broadcast=True)
-        
-        camera.exit()
-    except Exception as e:
-        emit('error', f"Capturing failed: { e }")
-        logger.exception(f"Capturing failed: { e }")
+        # Prep the data objects
+        algo_input = []
+        for datacenter in datacenters:
+            prepped_datacenter = copy.deepcopy(datacenter)
+            prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, i + 0)
+            prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, i + 1)
+            prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, i + 2)
+            print(prepped_datacenter)
+            algo_input.append(prepped_datacenter)
+
+        # Call Algo
+        result = shift(algo_input)
+
+        # Integrate back into out DB
+        shift_dictionary = result[0]
+        changed_dcs = result[1]
+
+        # Don't Blame me for my nice code :D
+        for changed_dc in changed_dcs:
+            for real_dc in datacenters:
+                if changed_dc.name == real_dc.name:
+                    real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
+
+        # Create JSON to send
+        to_send_json = {"shifts": [], "datacenters": {}}
+        for shift_tuple, value in shift_dictionary.items():
+            to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
+            print("Shifted {} VMs from {} to {}".format(shift_tuple[0].name, shift_tuple[1].name, value))
+        for dc in datacenters:
+            to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
+
+        emit('step_data', to_send_json)
 
 
 if __name__ == "__main__":
+    # socketio.run(app=app, host='127.0.0.1', debug=True)
 
-    socketio.run(app=app, host='127.0.0.1', debug=True)
+    # Tests
+    tc = socketio.test_client(app)
+    example_datacenter_1 = {"name": "DC 1",
+                            "company": "vmware",
+                            "longitude": 55.2321664,
+                            "latitude": 9.5155424,
+                            "windpower_kwh": 2000,
+                            "solarpower_kwh": 2000,
+                            "datacenter_vm_count_0": 2000}
+    tc.emit("create_datacenters", example_datacenter_1)
+
+    example_datacenter_2 = {"name": "DC 2",
+                            "company": "wmware",
+                            "longitude": 52.5041664,
+                            "latitude": 13.4119424,
+                            "windpower_kwh": 2000,
+                            "solarpower_kwh": 2000,
+                            "datacenter_vm_count_0": 100}
+    tc.emit("create_datacenters", example_datacenter_2)
+
+
+    tc.emit("begin_datastream")
+    received = tc.get_received()
+    print("")
+    print(received)
