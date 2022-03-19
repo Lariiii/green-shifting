@@ -10,7 +10,7 @@ from flask import Flask  # , render_template
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
-from models import Position
+from models import Position, Datacenter
 from openweathermap import request_one_call_timemachine_api
 
 BASE_URL = 'http://127.0.0.1:5000'
@@ -23,7 +23,7 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-datacenters = []
+datacenters: list[Datacenter] = []
 data_points_length = 0
 
 
@@ -38,6 +38,13 @@ def create_datacenters(datacenter_json):
                     "solarpower_kwh": 0,
                     "datacenter_vm_count_0": 1000}
 
+    datacenter = Datacenter(name=datacenter_json["name"],
+                            company=datacenter_json["company"],
+                            position=Position(latitude=datacenter_json["latitude"], longitude=datacenter_json["longitude"]),
+                            windpower_kwh=datacenter_json["windpower_kwh"],
+                            solarpower_kwh=datacenter_json["solarpower_kwh"],
+                            datacenter_vm_count_0=datacenter_json["datacenter_vm_count_0"])
+
     print(datacenter_json)
     global datacenters
     global data_points_length
@@ -48,10 +55,7 @@ def create_datacenters(datacenter_json):
     unix_now = math.floor(time.mktime(now.timetuple()))
 
     # Call Mirko API
-    position = Position(
-        latitude=datacenter_json["latitude"],
-        longitude=datacenter_json["longitude"])
-    environment_data = request_one_call_timemachine_api(position, unix_now).forecast.hourly
+    environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
     data_points_length = len(environment_data)
     datacenter_json["environment_data"] = environment_data
     datacenters.append(datacenter_json)
@@ -63,9 +67,8 @@ def begin_datastream():
 
     def get_total_vm_cap(datacenter_obj, index):
         VM_KWH_CONSUMPTION = 1
-
-        wind_kwh = datacenter_obj["windpower_kwh"] * datacenter_obj["environment_data"][index].wind_efficiency
-        solar_kwh = datacenter_obj["solarpower_kwh"] * datacenter_obj["environment_data"][index].solar_efficiency
+        wind_kwh = datacenter_obj.windpower_kwh * datacenter_obj.environment[index].wind_efficiency
+        solar_kwh = datacenter_obj.solarpower_kwh * datacenter_obj.environment[index].solar_efficiency
 
         return math.floor((wind_kwh + solar_kwh) / VM_KWH_CONSUMPTION)
 
@@ -76,9 +79,9 @@ def begin_datastream():
         algo_input = []
         for datacenter in datacenters:
             prepped_datacenter = copy.deepcopy(datacenter)
-            prepped_datacenter["datacenter_vm_count_1"] = get_total_vm_cap(prepped_datacenter, i + 0)
-            prepped_datacenter["datacenter_vm_count_2"] = get_total_vm_cap(prepped_datacenter, i + 1)
-            prepped_datacenter["datacenter_vm_count_3"] = get_total_vm_cap(prepped_datacenter, i + 2)
+            prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, i + 0)
+            prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, i + 1)
+            prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, i + 2)
             algo_input.append(prepped_datacenter)
 
         # Call Algo
@@ -89,20 +92,18 @@ def begin_datastream():
 
 
 if __name__ == "__main__":
-    #socketio.run(app=app, host='127.0.0.1', debug=True)
+    # socketio.run(app=app, host='127.0.0.1', debug=True)
 
     print("yep")
     tc = socketio.test_client(app)
     print("emitting")
 
     # Test Create Datacenter
-    example_json = {"name": "",
-                    "company": "",
-                    "longitude": 0,
-                    "latitude": 0,
-                    "windpower_kwh": 0,
-                    "solarpower_kwh": 0,
-                    "datacenter_vm_count_0": 1000}
-    tc.emit("create_datacenters", {})
-
-
+    example_datacenter = {"name": "",
+                          "company": "",
+                          "longitude": 0,
+                          "latitude": 0,
+                          "windpower_kwh": 0,
+                          "solarpower_kwh": 0,
+                          "datacenter_vm_count_0": 1000}
+    tc.emit("create_datacenters", example_datacenter)
