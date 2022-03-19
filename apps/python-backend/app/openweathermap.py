@@ -62,6 +62,23 @@ class OpenWeatherMapForecast(object):
             hourly = []
         self.hourly = hourly
 
+    def limit_to_time_range(self,
+                            lower: Optional[int],
+                            upper: Optional[int],
+                            lower_inclusive: bool = True,
+                            upper_inclusive: bool = False) -> None:
+        if lower is not None:
+            if lower_inclusive:
+                self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp >= lower]
+            else:
+                self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp > lower]
+
+        if upper is not None:
+            if upper_inclusive:
+                self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp <= upper]
+            else:
+                self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp < upper]
+
     def __str__(self) -> str:
         return f"{len(self.hourly)} Hours\n" + "\n".join([forecast.__str__() for forecast in self.hourly])
 
@@ -129,13 +146,20 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
 
     # Data block contains hourly historical data starting at 00:00 on the requested day and continues until 23:59 on
     # the same day (UTC time)
-    timestamps_to_request = [unix_timestamp - SECONDS_PER_DAY, unix_timestamp]
+    unix_timestamp_yesterday = unix_timestamp - SECONDS_PER_DAY
+    timestamps_to_request = [unix_timestamp_yesterday, unix_timestamp]
 
     urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=pos.latitude, lon=pos.longitude, dt=dt) for dt in
                        timestamps_to_request]
     responses: List[requests.Response] = [requests.get(url) for url in urls_to_request]
 
     resp = OneCallApiResponse.from_responses(responses)
+    resp.forecast.limit_to_time_range(
+        lower=unix_timestamp_yesterday,
+        upper=unix_timestamp,
+        lower_inclusive=True,
+        upper_inclusive=False
+    )
 
     return resp
 
