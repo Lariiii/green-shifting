@@ -25,7 +25,8 @@ export default ({ project, unproject }) => {
   } = useRefWidthHeightObserver();
   const enabled = true;
 
-  const datacentersData = useSelector(state => state.data.dataCenters)
+  const datacentersData = useSelector(state => state.data.dataCenters);
+  const pewpewlines = useSelector(state => state.data.pewpewlines);
 
   const isMapLoaded = useSelector(state => !state.application.isLoadingMap);
   const isMoving = useSelector(state => state.application.isMovingMap);
@@ -52,30 +53,38 @@ export default ({ project, unproject }) => {
   // hacky once Windy service is merged here and perhaps optimized via WebGL.
   // See https://github.com/tmrowco/electricitymap-contrib/issues/944.
   useEffect(() => {
-    if (isVisible && node && datacentersData && width && height) {
+    if (isVisible && node && datacentersData && pewpewlines && width && height) {
 
       const ctx = node.getContext('2d');
       ctx.clearRect(0, 0, width, height);
 
       const d = 75;
 
-      
+      let fromDatacenter;
+      let toDatacenter;
 
-      for (var i=0; i < datacentersData.length; i++) {
-
-        const dc = datacentersData[i];
-        const [ x, y ]= project([dc.lon, dc.lat]);
-
-        var img = new Image();
-        img.onload = function() {
-          ctx.drawImage(img, x-(d/2) , y-(d/2), d, d);
+      for (var i=0; i < pewpewlines.length; i++) {
+        for (var j=0; j < datacentersData.length; j++) {
+          const datacenter = datacentersData[j];
+          if (datacenter.name == pewpewlines[i].from) {
+            fromDatacenter = datacenter;
+          } else if (datacenter.name == pewpewlines[i].to) {
+            toDatacenter = datacenter;
+          }
         }
-        img.src = "/images/datacenter.svg"
-        //ctx.drawImage('/images/datacenter.svg', x+(d/2) , y+(d/2), d, d);
+
+        if (fromDatacenter && toDatacenter) {
+          const [ fromLon, fromLat ] = project([fromDatacenter.lon, fromDatacenter.lat]);
+          const [ toLon, toLat ] = project([toDatacenter.lon, toDatacenter.lat]); 
+          ctx.beginPath();
+          ctx.moveTo(fromLon, fromLat);
+          ctx.lineTo(toLon, toLat);
+          ctx.stroke()
+        }
       }
 
     }
-  }, [isVisible, node, datacentersData]);
+  }, [isVisible, node, pewpewlines, datacentersData]);
 
   return (
     <CSSTransition
@@ -84,7 +93,7 @@ export default ({ project, unproject }) => {
       timeout={300}
     >
       <Canvas
-        id="datacenters"
+        id="pewpew"
         width={width}
         height={height}
         ref={ref}

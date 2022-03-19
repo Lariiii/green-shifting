@@ -54,9 +54,12 @@ const initialDataState = {
   solarDataError: null,
   windDataError: null,
   dataCenters: [
-    { 'lat': 52.39213929283949, 'lon': 13.124911168035899 },
-    { 'lat': -12.062866, 'lon': -77.033793 },
-    { 'lat': 65.582530, 'lon': 22.158004 }
+    { 'name': 'HPI', 'lat': 52.39213929283949, 'lon': 13.124911168035899 },
+    { 'name': 'Lima', 'lat': -12.062866, 'lon': -77.033793 },
+    { 'name': 'Lappland', 'lat': 65.582530, 'lon': 22.158004 }
+  ],
+  pewpewlines: [
+    { 'from': 'Lappland', 'to': 'HPI'},
   ],
 };
 
