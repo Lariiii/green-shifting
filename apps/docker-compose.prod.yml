@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  fastapi:
+    build:
+      dockerfile: Dockerfile_prod
+    restart: unless-stopped
+  react:
+    build:
+      dockerfile: Dockerfile_prod
+      args:
+        REACT_APP_BACKEND_HOST: /api
+        REACT_APP_WEBSOCKET_PATH: /ws/socket.io
+        REACT_APP_MINIO_URL: /minio
+        REACT_APP_LIVESTREAM_URL: /live
+    ports:
+      - "3000:3000"
+    image: visenseio/react-frontend:${VERSION:-latest}
+    networks:
+      - visense-network
+    depends_on:
+      - fastapi
+      - nginxstreaming
+      - minio
+      - socket-server
+    restart: unless-stopped
+  heartbeat:
+    environment:
+      - ENABLE_DEMO_DATA=false
+    restart: unless-stopped
+  db:
+    restart: unless-stopped

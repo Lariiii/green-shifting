@@ -1,0 +1,70 @@
+version: '3.8'
+services:
+  fastapi:
+    image: visenseio/fastapi-server:${VERSION:-latest}
+    depends_on:
+      - db
+      - rabbitmq
+    build:
+      context: fastapi-server
+    ports:
+      - '3001:3001'
+    networks:
+      - visense-network
+    env_file: .env
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+  python-backend:
+    image: visenseio/heartbeat-server:${VERSION:-latest}
+    build:
+      context: heartbeat-server/
+    env_file: .env
+    depends_on:
+      - db
+      - rabbitmq
+      - fastapi
+    networks:
+      - visense-network
+    environment:
+      - ENABLE_DEMO_DATA=true
+    ports:
+      - '50505:50505'
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+  react:
+    tty: true
+    build:
+      context: react-frontend
+    environment:
+      - REACT_APP_BACKEND_HOST=http://localhost:3001
+      - REACT_APP_WEBSOCKET_PATH=/socket.io
+      - REACT_APP_MINIO_URL=http://localhost:9006
+      - REACT_APP_LIVESTREAM_URL=http://localhost:8080
+    networks:
+      - visense-network
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '6000:5432'
+    networks:
+      - visense-network
+    logging:
+      driver: journald
+      options:
+        tag: "{{.Name}}"
+volumes:
+  pgdata:
+networks:
+  visense-network:
+    name: visense-network

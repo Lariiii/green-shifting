@@ -1,0 +1,13 @@
+paramiko
+pika
+psycopg2-binary
+fastapi==0.65.1
+passlib[bcrypt]
+python-jose
+python-multipart
+minio
+sqlalchemy
+alembic
+prometheus-fastapi-instrumentator
+wait-for-it
+aiofiles

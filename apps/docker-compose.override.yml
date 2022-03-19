@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  react:
+    volumes:
+      - ./react-frontend:/app/
+    ports:
+      - '3000:3000'
+  fastapi:
+    volumes:
+      - ./fastapi-server/app:/app

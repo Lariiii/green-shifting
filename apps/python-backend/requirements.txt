@@ -1,0 +1,5 @@
+paramiko
+pika
+psycopg2-binary
+minio
+wait-for-it
