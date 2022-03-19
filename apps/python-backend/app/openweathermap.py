@@ -32,6 +32,7 @@ class SingleForecast(object):
                  sunrise: Optional[int],
                  sunset: Optional[int],
                  unix_timestamp: Optional[int],
+                 position: Optional[Position]
                  ):
         """
         :param cloudiness: in percent
@@ -45,6 +46,7 @@ class SingleForecast(object):
         self.unix_timestamp: Optional[int] = unix_timestamp
         self.sunrise: Optional[int] = sunrise
         self.sunset: Optional[int] = sunset
+        self.position: Optional[Position] = position
 
         self.cloudiness: Optional[int] = None
         self.solar_efficiency: Optional[float] = None
@@ -121,6 +123,7 @@ class SingleForecast(object):
 
     def __str__(self) -> str:
         return (f'{self.unix_timestamp} (UTC):' if self.unix_timestamp is not None else '????????????????:') + \
+               (f' {self.position.__str__()}' if self.position is not None else '') + \
                (f' sunrise={self.sunrise}%' if self.sunrise is not None else '') + \
                (f' sunset={self.sunset}%' if self.sunset is not None else '') + \
                (f' clouds={self.cloudiness}%' if self.cloudiness is not None else '') + \
@@ -129,8 +132,15 @@ class SingleForecast(object):
                (f' solar_efficiency={self.solar_efficiency}' if self.solar_efficiency is not None else '') + \
                (f' wind_efficiency={self.wind_efficiency}' if self.wind_efficiency is not None else '')
 
+    def log_efficiency(self, level: int = logging.INFO) -> None:
+        # noinspection PyTypeChecker
+        logger.log(level, f"{unix_timestamp_to_datetime_str(self.unix_timestamp)}@{self.position.__str__()}: {round(self.solar_efficiency * 100) if self.solar_efficiency is not None else '?'} % solar and {round(self.wind_efficiency * 100) if self.wind_efficiency is not None else '?'} % wind efficiency")
+
     @staticmethod
-    def from_json_dict(hourly_forecast_dict: Dict[str, Any], forecast_dict: Optional[Dict[str, Any]] = None):
+    def from_json_dict(
+            hourly_forecast_dict: Dict[str, Any],
+            forecast_dict: Optional[Dict[str, Any]] = None,
+            position: Optional[Position] = None):
         if forecast_dict is None:
             current_forecast = dict()
         else:
@@ -142,15 +152,17 @@ class SingleForecast(object):
             wind_gust=hourly_forecast_dict.get('wind_gust', None),
             sunrise=current_forecast.get('sunrise', None),
             sunset=current_forecast.get('sunset', None),
-            unix_timestamp=hourly_forecast_dict.get('dt', None)
+            unix_timestamp=hourly_forecast_dict.get('dt', None),
+            position=position
         )
 
 
 class OpenWeatherMapForecast(object):
-    def __init__(self, hourly: Optional[List[SingleForecast]] = None):
+    def __init__(self, hourly: Optional[List[SingleForecast]] = None, position: Optional[Position] = None):
         if hourly is None:
             hourly = []
         self.hourly: List[SingleForecast] = hourly
+        self.position = position
 
     def limit_to_time_range(self,
                             lower: Optional[int],
@@ -184,7 +196,7 @@ class OpenWeatherMapForecast(object):
     #     )
 
     @staticmethod
-    def from_json_dicts(forecast_dicts: List[Dict[str, Any]]):
+    def from_json_dicts(forecast_dicts: List[Dict[str, Any]], position: Optional[Position] = None):
         hourly_and_forecast_dicts: List[Tuple[Dict[str, Any], Dict[str, Any]]] = \
             [
                 (hourly_dict, forecast_dict)
@@ -193,16 +205,19 @@ class OpenWeatherMapForecast(object):
             ]
 
         return OpenWeatherMapForecast(
-            hourly=[SingleForecast.from_json_dict(hourly_forecast_dict, forecast_dict) for
-                    hourly_forecast_dict, forecast_dict in hourly_and_forecast_dicts]
+            hourly=[SingleForecast.from_json_dict(hourly_forecast_dict, forecast_dict, position) for
+                    hourly_forecast_dict, forecast_dict in hourly_and_forecast_dicts],
+            position=position
         )
 
 
 class OneCallApiResponse(object):
-    def __init__(self, forecast: Optional[OpenWeatherMapForecast] = None):
+    def __init__(self, forecast: Optional[OpenWeatherMapForecast] = None, position: Optional[Position] = None):
         if forecast is None:
             forecast = OpenWeatherMapForecast()
         self.forecast: OpenWeatherMapForecast = forecast
+
+        self.position = position
 
     def __str__(self) -> str:
         return "Forecast:\n\n" + self.forecast.__str__()
@@ -216,11 +231,12 @@ class OneCallApiResponse(object):
     #     )
 
     @staticmethod
-    def from_responses(responses: List[requests.Response]):
+    def from_responses(responses: List[requests.Response], position: Optional[Position] = None):
         json_responses = [resp.json() for resp in responses]
 
         return OneCallApiResponse(
-            forecast=OpenWeatherMapForecast.from_json_dicts(json_responses)
+            forecast=OpenWeatherMapForecast.from_json_dicts(json_responses, position),
+            position=position
         )
 
 
@@ -241,29 +257,29 @@ def request_url(url: str) -> requests.Response:
     return requests.get(url)
 
 
-def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneCallApiResponse:
+def request_one_call_timemachine_api(position: Position, unix_timestamp: int) -> OneCallApiResponse:
     """
     Requests historic weather data for 24h. Maybe only works for the last 5 days, not sure...
 
-    :param pos: a position on earth
+    :param position: a position on earth
     :param unix_timestamp: a unix timestamp directly AFTER the wanted 24h forecast epoch, given in UTC
     :return: a forecast with hourly weather data
     """
 
-    logger.info(f"requesting weather information for {pos.__str__()} at {unix_timestamp_to_datetime_str(unix_timestamp)}")
+    logger.info(f"requesting weather information for {position.__str__()} at {unix_timestamp_to_datetime_str(unix_timestamp)}")
     # Data block contains hourly historical data starting at 00:00 on the requested day and continues until 23:59 on
     # the same day (UTC time)
     unix_timestamp_yesterday = unix_timestamp - SECONDS_PER_DAY
     timestamps_to_request = [unix_timestamp_yesterday, unix_timestamp]
 
-    urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=pos.latitude, lon=pos.longitude, dt=dt) for dt in
+    urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=position.latitude, lon=position.longitude, dt=dt) for dt in
                        timestamps_to_request]
 
     responses: List[requests.Response] = [request_url(url) for url in urls_to_request]
-    logger.info(f"requested weather information for {pos.__str__()} at "
+    logger.info(f"requested weather information for {position.__str__()} at "
                 f"{' and '.join([unix_timestamp_to_datetime_str(dt) for dt in timestamps_to_request])}")
 
-    resp = OneCallApiResponse.from_responses(responses)
+    resp = OneCallApiResponse.from_responses(responses, position)
     resp.forecast.limit_to_time_range(
         lower=unix_timestamp_yesterday,
         upper=unix_timestamp,
@@ -271,17 +287,20 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
         upper_inclusive=False
     )
 
+    for hour_forecast in resp.forecast.hourly:
+        hour_forecast.log_efficiency(logging.DEBUG)
+
     return resp
 
 
 if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
 
-    position = Position(
+    pos = Position(
         latitude=52.5041664,
         longitude=13.4119424
     )  # Berlin
     unix_time = 1647713846 - 200000
 
-    response = request_one_call_timemachine_api(position, unix_time)
+    response = request_one_call_timemachine_api(pos, unix_time)
     print(response)
