@@ -1,5 +1,4 @@
-paramiko
-pika
 psycopg2-binary
-minio
+requests
+typing
 wait-for-it
