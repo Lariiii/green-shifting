@@ -17,9 +17,9 @@ services:
       options:
         tag: "{{.Name}}"
   python-backend:
-    image: visenseio/heartbeat-server:${VERSION:-latest}
+    image: visenseio/python-backend:${VERSION:-latest}
     build:
-      context: heartbeat-server/
+      context: python-backend/
     env_file: .env
     depends_on:
       - db
