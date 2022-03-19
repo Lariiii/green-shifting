@@ -1,0 +1,11 @@
+{
+  "localeToFacebookLocale": {
+    "en": "en_US"
+  },
+  "supportedFacebookLocales": [
+    "en_US"
+  ],
+  "languageNames": {
+    "en": "English"
+  }
+}

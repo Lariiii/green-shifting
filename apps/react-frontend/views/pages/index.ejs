@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF8" />
+        <meta name="viewport" content="width=device-width, viewport-fit=cover" />
+
+        <title>green shifting</title>
+
+        <!--<link rel="icon" type="image/svg+xml" href="<%= resolvePath('images/electricitymap-favicon-dark-light.svg') %>">
+        <link rel="apple-touch-icon" sizes="180x180" href="<%= resolvePath('images/apple-icon-180x180.png') %>">
+        <link rel="icon" type="image/png" sizes="32x32" href="<%= resolvePath('images/favicon-32x32.png') %>">
+        <link rel="icon" type="image/png" sizes="16x16" href="<%= resolvePath('images/favicon-16x16.png') %>">
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#ffffff">-->
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" href="<%= resolvePath('dist/styles.' + stylesHash + '.css') %>">
+        <link rel="stylesheet" type="text/css" href="<%= resolvePath('dist/vendor.' + vendorStylesHash + '.css') %>">
+
+        <!-- Fonts -->
+        <link href="<%= resolvePath('css/EuclidTriangleFont.css') %>" rel="stylesheet">
+        <link href="<%= resolvePath('css/OpenSansFont.css') %>" rel="stylesheet">
+        <link href="<%= resolvePath('css/MaterialIcons.css') %>" rel="stylesheet">
+
+        <!-- Language -->
+<% for(var i=0; i<alternateUrls.length; i++) { -%>
+        <link rel="alternate" href="<%- alternateUrls[i] %>" hreflang="<%= supportedLocales[i] %>" />
+<% } %>
+        <!-- Canonical -->
+<% if (typeof canonicalUrl != 'undefined') { -%>
+        <link rel="alternate" href="<%- canonicalUrl.replace(/[?|&]lang=[^&]*/, '') %>" hreflang="x-default" />
+        <link rel="canonical" href="<%- canonicalUrl %>" />
+<% } %>
+        <!-- Set Global Variables -->
+        <script>
+            var bundleHash = '<%= bundleHash %>';
+            var locale = '<%= locale %>';
+            var FBLocale = '<%= FBLocale %>';
+            var resolvePath = <%- resolvePath %>;
+            var locales = <%- JSON.stringify(locales) %>;
+            var isCordova = <%= (typeof isCordova !== 'undefined' && isCordova) %>;
+        </script>
+
+        <!-- Add crash reporting early on so we catch all errors -->
+        <script
+          src="https://browser.sentry-cdn.com/5.9.1/bundle.min.js"
+          integrity="sha384-/x1aHz0nKRd6zVUazsV6CbQvjJvr6zQL2CHbQZf3yoLkezyEtZUpqUNnOLW9Nt3v"
+          crossorigin="anonymous"></script>
+        <script>
+            if (bundleHash.indexOf('dev') === -1 && !isCordova) {
+                Sentry.init({
+                    dsn: 'https://bdda83aba5724206bf02a880b14c56d1@sentry.io/1295430',
+                    release: '<%= bundleHash %>',
+                    ignoreErrors: [
+                        // Non actionable errors:
+                        "invalid pixel coordinate"
+                    ]
+                });
+            }
+        </script>
+
+        <!-- Google App Indexing (Android) -->
+        <link rel="alternate" href="android-app://com.tmrow.electricitymap/https/app.electricitymap.org" />
+        <link rel="alternate" href="android-app://com.tmrow.electricitymap/http/app.electricitymap.org" />
+
+        <!-- Google App Indexing (iOS) -->
+        <link rel="alternate" href="ios-app://1224594248/https/app.electricitymap.org" />
+        <link rel="alternate" href="ios-app://1224594248/http/app.electricitymap.org" />
+
+        <% if (typeof isCordova != 'undefined' && isCordova) { %>
+        <script src="../cordova.js"></script>
+        <% } %>
+        <script defer src="<%= resolvePath('dist/vendor.' + vendorHash + '.js') %>"></script>
+        <script defer src="<%= resolvePath('dist/bundle.' + bundleHash + '.js') %>"></script>
+
+        <!-- Plausible -->
+        <script defer data-domain="app.electricitymap.org" src="https://plausible.io/js/plausible.local.js"></script>
+    </head>
+    <body lang="<%= locale %>" id="app"></body>
+
+</html>

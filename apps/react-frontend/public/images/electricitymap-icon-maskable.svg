@@ -1,0 +1,3 @@
+<!-- Same as electricitymap-icon.svg but with more margins to make it maskable, achieved only using the viewBox attributes -->
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="117" viewBox="-30 -40 177 177">
+ </svg>
