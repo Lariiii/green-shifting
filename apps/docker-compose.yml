@@ -5,9 +5,9 @@ services:
     build:
       context: python-backend/
     env_file: .env
-    depends_on:
-      - db
-      - fastapi
+    # depends_on:
+    #   - db
+    #   - fastapi
     networks:
       - visense-network
     environment:
@@ -29,8 +29,63 @@ services:
 #      driver: journald
 #      options:
 #        tag: "{{.Name}}"
+  react:
+    build:
+      context: .
+      dockerfile: react-frontend/Dockerfile
+      cache_from:
+        - eu.gcr.io/tmrow-152415/electricitymap_web:production
+        - eu.gcr.io/tmrow-152415/electricitymap_web:staging
+        - eu.gcr.io/tmrow-152415/electricitymap_web:latest
+    image: eu.gcr.io/tmrow-152415/electricitymap_web:latest
+    command: npm run server-dev
+    environment:
+      - NODE_ENV=development
+    ports: ['8000:8000']
+    volumes:
+      - './config:/home/config'
+      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/react-frontend/.eslintrc'
+      - './react-frontend/geo:/home/src/electricitymap/contrib/react-frontend/geo'
+      - './react-frontend/public/locales:/home/src/electricitymap/contrib/react-frontend/public/locales'
+      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/react-frontend/locales-config.json'
+      - './react-frontend/package.json:/home/src/electricitymap/contrib/react-frontend/package.json'
+      - './react-frontend/public:/home/src/electricitymap/contrib/react-frontend/public'
+      - './react-frontend/server.js:/home/src/electricitymap/contrib/react-frontend/server.js'
+      - './react-frontend/src:/home/src/electricitymap/contrib/react-frontend/src'
+      - './react-frontend/views:/home/src/electricitymap/contrib/react-frontend/views'
+      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/react-frontend/webpack.config.js'
+    networks:
+      - frontend-network
+  react-watch:
+    build:
+      context: .
+      dockerfile: react-frontend/Dockerfile
+      cache_from:
+        - eu.gcr.io/tmrow-152415/electricitymap_web:production
+        - eu.gcr.io/tmrow-152415/electricitymap_web:staging
+        - eu.gcr.io/tmrow-152415/electricitymap_web:latest
+    image: eu.gcr.io/tmrow-152415/electricitymap_web:latest
+    command: npm run watch
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - './config:/home/config'
+      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/react-frontend/.eslintrc'
+      - './react-frontend/geo:/home/src/electricitymap/contrib/react-frontend/geo'
+      - './react-frontend/public/locales:/home/src/electricitymap/contrib/react-frontend/public/locales'
+      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/react-frontend/locales-config.json'
+      - './react-frontend/package.json:/home/src/electricitymap/contrib/react-frontend/package.json'
+      - './react-frontend/public:/home/src/electricitymap/contrib/react-frontend/public'
+      - './react-frontend/server.js:/home/src/electricitymap/contrib/react-frontend/server.js'
+      - './react-frontend/src:/home/src/electricitymap/contrib/react-frontend/src'
+      - './react-frontend/views:/home/src/electricitymap/contrib/react-frontend/views'
+      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/react-frontend/webpack.config.js'
+    networks:
+      - frontend-network
 volumes:
   pgdata:
 networks:
   visense-network:
     name: visense-network
+  frontend-network:
+    name: frontend-network
