@@ -14,22 +14,7 @@ services:
       - ENABLE_DEMO_DATA=true
     ports:
       - '50505:50505'
-#  react:
-#    tty: true
-#    build:
-#      context: react-frontend
-#    environment:
-#      - REACT_APP_BACKEND_HOST=http://localhost:3001
-#      - REACT_APP_WEBSOCKET_PATH=/socket.io
-#      - REACT_APP_MINIO_URL=http://localhost:9006
-#      - REACT_APP_LIVESTREAM_URL=http://localhost:8080
-#    networks:
-#      - visense-network
-#    logging:
-#      driver: journald
-#      options:
-#        tag: "{{.Name}}"
-  react:
+  web:
     build:
       context: .
       dockerfile: react-frontend/Dockerfile
@@ -43,20 +28,20 @@ services:
       - NODE_ENV=development
     ports: ['8000:8000']
     volumes:
-      - './config:/home/config'
-      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/react-frontend/.eslintrc'
-      - './react-frontend/geo:/home/src/electricitymap/contrib/react-frontend/geo'
-      - './react-frontend/public/locales:/home/src/electricitymap/contrib/react-frontend/public/locales'
-      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/react-frontend/locales-config.json'
-      - './react-frontend/package.json:/home/src/electricitymap/contrib/react-frontend/package.json'
-      - './react-frontend/public:/home/src/electricitymap/contrib/react-frontend/public'
-      - './react-frontend/server.js:/home/src/electricitymap/contrib/react-frontend/server.js'
-      - './react-frontend/src:/home/src/electricitymap/contrib/react-frontend/src'
-      - './react-frontend/views:/home/src/electricitymap/contrib/react-frontend/views'
-      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/react-frontend/webpack.config.js'
+      - './react-frontend/config:/home/config'
+      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/web/.eslintrc'
+      - './react-frontend/geo:/home/src/electricitymap/contrib/web/geo'
+      - './react-frontend/public/locales:/home/src/electricitymap/contrib/web/public/locales'
+      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/web/locales-config.json'
+      - './react-frontend/package.json:/home/src/electricitymap/contrib/web/package.json'
+      - './react-frontend/public:/home/src/electricitymap/contrib/web/public'
+      - './react-frontend/server.js:/home/src/electricitymap/contrib/web/server.js'
+      - './react-frontend/src:/home/src/electricitymap/contrib/web/src'
+      - './react-frontend/views:/home/src/electricitymap/contrib/web/views'
+      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/web/webpack.config.js'
     networks:
       - frontend-network
-  react-watch:
+  web-watch:
     build:
       context: .
       dockerfile: react-frontend/Dockerfile
@@ -70,16 +55,16 @@ services:
       - NODE_ENV=development
     volumes:
       - './config:/home/config'
-      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/react-frontend/.eslintrc'
-      - './react-frontend/geo:/home/src/electricitymap/contrib/react-frontend/geo'
-      - './react-frontend/public/locales:/home/src/electricitymap/contrib/react-frontend/public/locales'
-      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/react-frontend/locales-config.json'
-      - './react-frontend/package.json:/home/src/electricitymap/contrib/react-frontend/package.json'
-      - './react-frontend/public:/home/src/electricitymap/contrib/react-frontend/public'
-      - './react-frontend/server.js:/home/src/electricitymap/contrib/react-frontend/server.js'
-      - './react-frontend/src:/home/src/electricitymap/contrib/react-frontend/src'
-      - './react-frontend/views:/home/src/electricitymap/contrib/react-frontend/views'
-      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/react-frontend/webpack.config.js'
+      - './react-frontend/.eslintrc:/home/src/electricitymap/contrib/web/.eslintrc'
+      - './react-frontend/geo:/home/src/electricitymap/contrib/web/geo'
+      - './react-frontend/public/locales:/home/src/electricitymap/contrib/web/public/locales'
+      - './react-frontend/locales-config.json:/home/src/electricitymap/contrib/web/locales-config.json'
+      - './react-frontend/package.json:/home/src/electricitymap/contrib/web/package.json'
+      - './react-frontend/public:/home/src/electricitymap/contrib/web/public'
+      - './react-frontend/server.js:/home/src/electricitymap/contrib/web/server.js'
+      - './react-frontend/src:/home/src/electricitymap/contrib/web/src'
+      - './react-frontend/views:/home/src/electricitymap/contrib/web/views'
+      - './react-frontend/webpack.config.js:/home/src/electricitymap/contrib/web/webpack.config.js'
     networks:
       - frontend-network
 volumes:

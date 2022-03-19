@@ -105,7 +105,7 @@
     "watch-poll": "webpack --watch --watch-poll --progress --mode development",
     "update-world": "node ./geo/update-world.js && yarn prettier --write 'geo/world.geojson'",
     "verify": "yarn lint && VERIFY_NO_UPDATES=1 yarn update-world",
-    "mockserver": "cd ../mockserver && node server.js"
+    "mockserver": "cd ../frontend-mockserver && node server.js"
   },
   "browserslist": [
     "defaults",

@@ -1,0 +1,13 @@
+.git
+*.tar.gz
+*.json
+*secrets*
+*.env
+*.mp4
+*.mkv
+
+node_modules
+public/dist
+zonegeometries.json
+
+screenshots*
