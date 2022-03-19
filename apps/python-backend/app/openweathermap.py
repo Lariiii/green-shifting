@@ -3,7 +3,7 @@
 
 import requests
 from models import Position
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # belongs to Mirko - should be deleted later
 API_KEY = "720ad709ee32204a850f50794813a928"
@@ -23,13 +23,23 @@ class SingleForecast(object):
                  cloudiness: Optional[int],
                  wind_speed: Optional[float],
                  wind_gust: Optional[float],
+                 sunrise: Optional[int],
+                 sunset: Optional[int],
                  unix_timestamp: Optional[int],
                  ):
         """
         :param cloudiness: in percent
         :param wind_speed: in metre/sec
         :param wind_gust: in metre/sec
+        :param sunrise: unix timestamp in UTC of the sunrise on the current day at the current location
+        :param sunset: unix timestamp in UTC of the sunset on the current day at the current location
+        :param sunrise: unix timestamp in UTC of the forecast's timestamp
         """
+        # must be set beforehand
+        self.unix_timestamp: Optional[int] = unix_timestamp
+        self.sunrise: Optional[int] = sunrise
+        self.sunset: Optional[int] = sunset
+
         self.cloudiness: Optional[int] = None
         self.solar_efficiency: Optional[float] = None
         self.set_cloudiness(cloudiness)
@@ -39,15 +49,24 @@ class SingleForecast(object):
         self.wind_efficiency: Optional[float] = None
         self.set_wind_speed(wind_speed, wind_gust)
 
-        self.unix_timestamp: Optional[int] = unix_timestamp
-
     def set_cloudiness(self, cloudiness: Optional[int]) -> None:
         self.cloudiness = cloudiness
-        if cloudiness is None:
+        if cloudiness is None or self.sunrise is None or self.unix_timestamp is None or self.sunset is None:
             self.solar_efficiency = None
         else:
-            # noinspection PyTypeChecker
-            self.solar_efficiency = round(1 - cloudiness / 100, 3)
+            if self.sunrise < self.unix_timestamp < self.sunset:
+                efficiency = 1 - cloudiness / 100
+
+                # assuming linear increase and decrease of the sun's intensity from sunrise to noon and
+                # from noon to sunset
+                intensity = (self.unix_timestamp - self.sunrise) / (self.sunset - self.sunrise)
+                if intensity > 0.5:  # afternoon
+                    intensity -= 0.5
+
+                # noinspection PyTypeChecker
+                self.solar_efficiency = round(intensity * efficiency, 3)
+            else:
+                self.solar_efficiency = 0.0
 
     def set_wind_speed(self, wind_speed: Optional[float], wind_gust: Optional[float]) -> None:
         self.wind_speed = wind_speed
@@ -74,6 +93,8 @@ class SingleForecast(object):
 
     def __str__(self) -> str:
         return (f'{self.unix_timestamp} (UTC):' if self.unix_timestamp is not None else '????????????????:') + \
+               (f' sunrise={self.sunrise}%' if self.sunrise is not None else '') + \
+               (f' sunset={self.sunset}%' if self.sunset is not None else '') + \
                (f' clouds={self.cloudiness}%' if self.cloudiness is not None else '') + \
                (f' wind={self.wind_speed}m/s' if self.wind_speed is not None else '') + \
                (f' gust={self.wind_gust}m/s' if self.wind_gust is not None else '') + \
@@ -81,26 +102,20 @@ class SingleForecast(object):
                (f' wind_efficiency={self.wind_efficiency}' if self.wind_efficiency is not None else '')
 
     @staticmethod
-    def from_json_dict(dic: Dict[str, Any]):
+    def from_json_dict(hourly_forecast_dict: Dict[str, Any], forecast_dict: Optional[Dict[str, Any]] = None):
+        if forecast_dict is None:
+            current_forecast = dict()
+        else:
+            current_forecast = forecast_dict.get('current', dict())
+
         return SingleForecast(
-            cloudiness=dic.get('clouds', None),
-            wind_speed=dic.get('wind_speed', None),
-            wind_gust=dic.get('wind_gust', None),
-            unix_timestamp=dic.get('dt', None)
+            cloudiness=hourly_forecast_dict.get('clouds', None),
+            wind_speed=hourly_forecast_dict.get('wind_speed', None),
+            wind_gust=hourly_forecast_dict.get('wind_gust', None),
+            sunrise=current_forecast.get('sunrise', None),
+            sunset=current_forecast.get('sunset', None),
+            unix_timestamp=hourly_forecast_dict.get('dt', None)
         )
-
-
-def concatenate_lists(lists: List[List[Any]]) -> List[Any]:
-    if len(lists) == 0:
-        return []
-
-    if len(lists) == 1:
-        return lists[0]
-
-    res = lists[0]
-    for l in lists[1:]:
-        res += l
-    return res
 
 
 class OpenWeatherMapForecast(object):
@@ -129,18 +144,25 @@ class OpenWeatherMapForecast(object):
     def __str__(self) -> str:
         return f"{len(self.hourly)} Hours\n" + "\n".join([forecast.__str__() for forecast in self.hourly])
 
-    @staticmethod
-    def from_json_dict(dic: Dict[str, Any]):
-        return OpenWeatherMapForecast(
-            hourly=[SingleForecast.from_json_dict(hourly_forecast_dict) for hourly_forecast_dict in
-                    dic.get('hourly', [])]
-        )
+    # @staticmethod
+    # def from_json_dict(dic: Dict[str, Any]):
+    #     return OpenWeatherMapForecast(
+    #         hourly=[SingleForecast.from_json_dict(hourly_forecast_dict) for hourly_forecast_dict in
+    #                 dic.get('hourly', [])]
+    #     )
 
     @staticmethod
-    def from_json_dicts(dicts: List[Dict[str, Any]]):
+    def from_json_dicts(forecast_dicts: List[Dict[str, Any]]):
+        hourly_and_forecast_dicts: List[Tuple[Dict[str, Any], Dict[str, Any]]] = \
+            [
+                (hourly_dict, forecast_dict)
+                for forecast_dict in forecast_dicts
+                for hourly_dict in forecast_dict.get('hourly', [])
+            ]
+
         return OpenWeatherMapForecast(
-            hourly=[SingleForecast.from_json_dict(hourly_forecast_dict) for hourly_forecast_dict in
-                    concatenate_lists([dic.get('hourly', []) for dic in dicts])]
+            hourly=[SingleForecast.from_json_dict(hourly_forecast_dict, forecast_dict) for
+                    hourly_forecast_dict, forecast_dict in hourly_and_forecast_dicts]
         )
 
 
@@ -153,13 +175,13 @@ class OneCallApiResponse(object):
     def __str__(self) -> str:
         return "Forecast:\n\n" + self.forecast.__str__()
 
-    @staticmethod
-    def from_response(resp: requests.Response):
-        json_response = resp.json()
-
-        return OneCallApiResponse(
-            forecast=OpenWeatherMapForecast.from_json_dict(json_response)
-        )
+    # @staticmethod
+    # def from_response(resp: requests.Response):
+    #     json_response = resp.json()
+    #
+    #     return OneCallApiResponse(
+    #         forecast=OpenWeatherMapForecast.from_json_dict(json_response)
+    #     )
 
     @staticmethod
     def from_responses(responses: List[requests.Response]):

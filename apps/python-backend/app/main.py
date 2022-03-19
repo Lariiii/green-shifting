@@ -45,7 +45,6 @@ def create_datacenters(datacenter_json):
                             solarpower_kwh=datacenter_json["solarpower_kwh"],
                             datacenter_vm_count_0=datacenter_json["datacenter_vm_count_0"])
 
-    print(datacenter_json)
     global datacenters
     global data_points_length
 
@@ -57,8 +56,8 @@ def create_datacenters(datacenter_json):
     # Call Mirko API
     environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
     data_points_length = len(environment_data)
-    datacenter_json["environment_data"] = environment_data
-    datacenters.append(datacenter_json)
+    datacenter.environment = environment_data
+    datacenters.append(datacenter)
 
 
 @socketio.event
@@ -82,28 +81,56 @@ def begin_datastream():
             prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, i + 0)
             prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, i + 1)
             prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, i + 2)
+            print(prepped_datacenter)
             algo_input.append(prepped_datacenter)
 
         # Call Algo
         # result = algo.predict(algo_input)
-        result = {}
 
-        emit('step_data', result)
+        # Mock Code to test
+        mock_dc_1 = datacenters[0]
+        mock_dc_1.datacenter_vm_count_0 = mock_dc_1.datacenter_vm_count_0 - 300
+        mock_dc_2 = datacenters[1]
+        mock_dc_2.datacenter_vm_count_0 = mock_dc_2.datacenter_vm_count_0 + 300
+        mock_result = ({(mock_dc_1, mock_dc_2): 300}, [mock_dc_1, mock_dc_2])
+
+        # Integrate back into out DB
+        shift_dictionary = mock_result[0]
+        changed_dcs = mock_result[1]
+
+        # Don't Blame me for my nice code :D
+        for changed_dc in changed_dcs:
+            for real_dc in datacenters:
+                if changed_dc.name == real_dc.name:
+                    real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
+
+        emit('step_data', {})
 
 
 if __name__ == "__main__":
     # socketio.run(app=app, host='127.0.0.1', debug=True)
 
-    print("yep")
+    # Tests
     tc = socketio.test_client(app)
-    print("emitting")
+    example_datacenter_1 = {"name": "DC 1",
+                            "company": "vmware",
+                            "longitude": 55.2321664,
+                            "latitude": 9.5155424,
+                            "windpower_kwh": 2000,
+                            "solarpower_kwh": 2000,
+                            "datacenter_vm_count_0": 10000}
+    tc.emit("create_datacenters", example_datacenter_1)
 
-    # Test Create Datacenter
-    example_datacenter = {"name": "",
-                          "company": "",
-                          "longitude": 0,
-                          "latitude": 0,
-                          "windpower_kwh": 0,
-                          "solarpower_kwh": 0,
-                          "datacenter_vm_count_0": 1000}
-    tc.emit("create_datacenters", example_datacenter)
+    example_datacenter_2 = {"name": "DC 2",
+                            "company": "wmware",
+                            "longitude": 52.5041664,
+                            "latitude": 13.4119424,
+                            "windpower_kwh": 2000,
+                            "solarpower_kwh": 2000,
+                            "datacenter_vm_count_0": 10000}
+    tc.emit("create_datacenters", example_datacenter_2)
+
+
+    tc.emit("begin_datastream")
+    received = tc.get_received()
+    print(received)
