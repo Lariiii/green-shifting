@@ -27,9 +27,9 @@ class Datacenter:
         self.datacenter_vm_count_0 = datacenter_vm_count_0
 
         # Soll Werte in der Zukunft
-        self.datacenter_vm_count_1 = 0
-        self.datacenter_vm_count_2 = 0
-        self.datacenter_vm_count_3 = 0
+        self.datacenter_vm_count_1 = -1
+        self.datacenter_vm_count_2 = -1
+        self.datacenter_vm_count_3 = -1
 
         # Wetter Daten 24h
         self.environment = None

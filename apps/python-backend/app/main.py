@@ -73,6 +73,8 @@ def begin_datastream():
 
     for i in range(data_points_length - 3):
         time.sleep(1)
+        timestamp = datetime.utcfromtimestamp(datacenters[0].environment[i].unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        print("\n--- New Hour {} ---".format(timestamp))
 
         # Prep the data objects
         algo_input = []
@@ -89,10 +91,10 @@ def begin_datastream():
 
         # Mock Code to test
         mock_dc_1 = datacenters[0]
-        mock_dc_1.datacenter_vm_count_0 = mock_dc_1.datacenter_vm_count_0 - 300
+        mock_dc_1.datacenter_vm_count_0 = mock_dc_1.datacenter_vm_count_0 - 200
         mock_dc_2 = datacenters[1]
-        mock_dc_2.datacenter_vm_count_0 = mock_dc_2.datacenter_vm_count_0 + 300
-        mock_result = ({(mock_dc_1, mock_dc_2): 300}, [mock_dc_1, mock_dc_2])
+        mock_dc_2.datacenter_vm_count_0 = mock_dc_2.datacenter_vm_count_0 + 200
+        mock_result = ({(mock_dc_1, mock_dc_2): 200}, [mock_dc_1, mock_dc_2])
 
         # Integrate back into out DB
         shift_dictionary = mock_result[0]
@@ -103,6 +105,13 @@ def begin_datastream():
             for real_dc in datacenters:
                 if changed_dc.name == real_dc.name:
                     real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
+
+        to_send_json = {"shifts": {}, "datacenters": {}}
+        for shift_tuple, value in shift_dictionary.items():
+            to_send_json["shifts"] = {"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value}
+        for dc in datacenters:
+            to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
+
 
         emit('step_data', {})
 
@@ -118,7 +127,7 @@ if __name__ == "__main__":
                             "latitude": 9.5155424,
                             "windpower_kwh": 2000,
                             "solarpower_kwh": 2000,
-                            "datacenter_vm_count_0": 10000}
+                            "datacenter_vm_count_0": 2000}
     tc.emit("create_datacenters", example_datacenter_1)
 
     example_datacenter_2 = {"name": "DC 2",
@@ -127,7 +136,7 @@ if __name__ == "__main__":
                             "latitude": 13.4119424,
                             "windpower_kwh": 2000,
                             "solarpower_kwh": 2000,
-                            "datacenter_vm_count_0": 10000}
+                            "datacenter_vm_count_0": 2000}
     tc.emit("create_datacenters", example_datacenter_2)
 
 
