@@ -1,0 +1,30 @@
+*.pyc
+*.env
+web/public/dist
+web/node_modules
+mockserver/node_modules
+.ipynb_checkpoints/
+*.pyproj
+*.sln
+*.suo
+*.user
+/.vs/config
+/App_Data/PublishProfiles
+*.publishproj
+.DS_Store
+/.vs
+/.venv
+Thumbs.db
+mobileapp/*.zip
+dist
+
+## Pycharm IDE
+.idea
+.vscode
+
+
+build
+zonegeometries.json
+
+## Netbeans folder
+nbproject
