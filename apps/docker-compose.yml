@@ -23,7 +23,6 @@ services:
     env_file: .env
     depends_on:
       - db
-      - rabbitmq
       - fastapi
     networks:
       - visense-network
@@ -31,25 +30,21 @@ services:
       - ENABLE_DEMO_DATA=true
     ports:
       - '50505:50505'
-    logging:
-      driver: journald
-      options:
-        tag: "{{.Name}}"
-  react:
-    tty: true
-    build:
-      context: react-frontend
-    environment:
-      - REACT_APP_BACKEND_HOST=http://localhost:3001
-      - REACT_APP_WEBSOCKET_PATH=/socket.io
-      - REACT_APP_MINIO_URL=http://localhost:9006
-      - REACT_APP_LIVESTREAM_URL=http://localhost:8080
-    networks:
-      - visense-network
-    logging:
-      driver: journald
-      options:
-        tag: "{{.Name}}"
+#  react:
+#    tty: true
+#    build:
+#      context: react-frontend
+#    environment:
+#      - REACT_APP_BACKEND_HOST=http://localhost:3001
+#      - REACT_APP_WEBSOCKET_PATH=/socket.io
+#      - REACT_APP_MINIO_URL=http://localhost:9006
+#      - REACT_APP_LIVESTREAM_URL=http://localhost:8080
+#    networks:
+#      - visense-network
+#    logging:
+#      driver: journald
+#      options:
+#        tag: "{{.Name}}"
   db:
     image: postgres:13
     env_file: .env
