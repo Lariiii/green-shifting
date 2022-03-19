@@ -45,7 +45,6 @@ def create_datacenters(datacenter_json):
                             solarpower_kwh=datacenter_json["solarpower_kwh"],
                             datacenter_vm_count_0=datacenter_json["datacenter_vm_count_0"])
 
-    print(datacenter_json)
     global datacenters
     global data_points_length
 
@@ -57,8 +56,8 @@ def create_datacenters(datacenter_json):
     # Call Mirko API
     environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
     data_points_length = len(environment_data)
-    datacenter_json["environment_data"] = environment_data
-    datacenters.append(datacenter_json)
+    datacenter.environment = environment_data
+    datacenters.append(datacenter)
 
 
 @socketio.event
@@ -82,11 +81,14 @@ def begin_datastream():
             prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, i + 0)
             prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, i + 1)
             prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, i + 2)
+            print(prepped_datacenter)
             algo_input.append(prepped_datacenter)
 
         # Call Algo
         # result = algo.predict(algo_input)
         result = {}
+
+        #{(datacenter, datacenters): 1}, []
 
         emit('step_data', result)
 
@@ -94,16 +96,18 @@ def begin_datastream():
 if __name__ == "__main__":
     # socketio.run(app=app, host='127.0.0.1', debug=True)
 
-    print("yep")
+    # Tests
     tc = socketio.test_client(app)
-    print("emitting")
-
-    # Test Create Datacenter
     example_datacenter = {"name": "",
                           "company": "",
                           "longitude": 0,
                           "latitude": 0,
-                          "windpower_kwh": 0,
-                          "solarpower_kwh": 0,
-                          "datacenter_vm_count_0": 1000}
+                          "windpower_kwh": 2000,
+                          "solarpower_kwh": 2000,
+                          "datacenter_vm_count_0": 10000}
     tc.emit("create_datacenters", example_datacenter)
+
+
+    tc.emit("begin_datastream")
+    received = tc.get_received()
+    print(received)

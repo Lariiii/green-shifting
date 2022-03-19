@@ -33,3 +33,11 @@ class Datacenter:
 
         # Wetter Daten 24h
         self.environment = None
+
+    def __str__(self) -> str:
+        return (f'DC: {self.name}:' if self.name is not None else '') + \
+               (f' datacenter_vm_count_0={self.datacenter_vm_count_0} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_1={self.datacenter_vm_count_1} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_2={self.datacenter_vm_count_2} VMs' if self.datacenter_vm_count_0 is not None else '') + \
+               (f' datacenter_vm_count_3={self.datacenter_vm_count_3} VMs' if self.datacenter_vm_count_0 is not None else '')
+
