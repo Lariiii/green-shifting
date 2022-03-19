@@ -25,13 +25,42 @@ class SingleForecast(object):
         :param wind_speed: in metre/sec
         :param wind_gust: in metre/sec
         """
+        self.cloudiness: Optional[int] = None
+        self.solar_efficiency: Optional[float] = None
+        self.set_cloudiness(cloudiness)
+
+        self.wind_speed: Optional[float] = None
+        self.wind_gust: Optional[float] = None
+        self.wind_efficiency: Optional[float] = None
+        self.set_wind_speed(wind_speed, wind_gust)
+
+        self.unix_timestamp: Optional[int] = unix_timestamp
+
+    def set_cloudiness(self, cloudiness: Optional[int]) -> None:
         self.cloudiness = cloudiness
+        if cloudiness is None:
+            self.solar_efficiency = None
+        else:
+            self.solar_efficiency = cloudiness / 100
+
+    def set_wind_speed(self, wind_speed: Optional[float], wind_gust: Optional[float]) -> None:
         self.wind_speed = wind_speed
         self.wind_gust = wind_gust
-        self.unix_timestamp = unix_timestamp
+        if wind_speed is None:
+            self.wind_efficiency = None
+        elif wind_gust is None:
+            self.wind_efficiency = self.wind_speed / 100  # TODO
+        else:
+            # there are gusts
+            self.wind_efficiency = self.wind_speed / 100  # TODO
 
     def __str__(self) -> str:
-        return f"{f'{self.unix_timestamp} (UTC):' if self.unix_timestamp is not None else '????????????????:'}{f' clouds={self.cloudiness}%' if self.cloudiness is not None else ''}{f' wind={self.wind_speed}m/s' if self.wind_speed is not None else ''}{f' gust={self.wind_gust}m/s' if self.wind_gust is not None else ''}"
+        return (f'{self.unix_timestamp} (UTC):' if self.unix_timestamp is not None else '????????????????:') + \
+               (f' clouds={self.cloudiness}%' if self.cloudiness is not None else '') + \
+               (f' wind={self.wind_speed}m/s' if self.wind_speed is not None else '') + \
+               (f' gust={self.wind_gust}m/s' if self.wind_gust is not None else '') + \
+               (f' solar_efficiency={self.solar_efficiency}' if self.solar_efficiency is not None else '') + \
+               (f' wind_efficiency={self.wind_efficiency}' if self.wind_efficiency is not None else '')
 
     @staticmethod
     def from_json_dict(dic: Dict[str, Any]):
@@ -60,7 +89,7 @@ class OpenWeatherMapForecast(object):
     def __init__(self, hourly: Optional[List[SingleForecast]] = None):
         if hourly is None:
             hourly = []
-        self.hourly = hourly
+        self.hourly: List[SingleForecast] = hourly
 
     def limit_to_time_range(self,
                             lower: Optional[int],
@@ -101,7 +130,7 @@ class OneCallApiResponse(object):
     def __init__(self, forecast: Optional[OpenWeatherMapForecast] = None):
         if forecast is None:
             forecast = OpenWeatherMapForecast()
-        self.forecast = forecast
+        self.forecast: OpenWeatherMapForecast = forecast
 
     def __str__(self) -> str:
         return "Forecast:\n\n" + self.forecast.__str__()
