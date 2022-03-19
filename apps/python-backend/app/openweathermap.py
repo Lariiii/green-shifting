@@ -12,6 +12,11 @@ BASE_URL = "https://api.openweathermap.org/data/2.5"
 ONE_CALL_API_URL = f"{BASE_URL}/onecall?lat={{lat}}&lon={{lon}}&exclude=alerts,minutely,daily&appid={API_KEY}"
 ONE_CALL_TIMEMACHINE_API_URL = f"{BASE_URL}/onecall/timemachine?lat={{lat}}&lon={{lon}}&dt={{dt}}&appid={API_KEY}"
 
+WIND_FORCE_MIN_SPEED = 4  # m/s
+WIND_FORCE_BEST_SPEED = 12  # m/s
+WIND_FORCE_MAX_SPEED = 28  # m/s
+WIND_FORCE_MAX_SPEED_GUST = 35  # m/s
+
 
 class SingleForecast(object):
     def __init__(self,
@@ -41,18 +46,31 @@ class SingleForecast(object):
         if cloudiness is None:
             self.solar_efficiency = None
         else:
-            self.solar_efficiency = cloudiness / 100
+            # noinspection PyTypeChecker
+            self.solar_efficiency = round(1 - cloudiness / 100, 3)
 
     def set_wind_speed(self, wind_speed: Optional[float], wind_gust: Optional[float]) -> None:
         self.wind_speed = wind_speed
         self.wind_gust = wind_gust
+
+        # data source: https://www.suisse-eole.ch/de/windenergie/faq/ab-welcher-windgeschwindigkeit-dreht-eine-windenergieanlage-8/
         if wind_speed is None:
             self.wind_efficiency = None
-        elif wind_gust is None:
-            self.wind_efficiency = self.wind_speed / 100  # TODO
+        elif WIND_FORCE_MIN_SPEED <= wind_speed < WIND_FORCE_MAX_SPEED:
+            if wind_gust is None or wind_gust < WIND_FORCE_MAX_SPEED_GUST:
+                if wind_speed >= WIND_FORCE_BEST_SPEED:
+                    self.wind_efficiency = 1.0
+                else:
+                    self.wind_efficiency = \
+                        (wind_speed - WIND_FORCE_MIN_SPEED) / (WIND_FORCE_BEST_SPEED - WIND_FORCE_MIN_SPEED)
+                    # noinspection PyTypeChecker
+                    self.wind_efficiency = round(self.wind_efficiency, 3)
+            else:
+                # too strong gusts
+                self.wind_efficiency = 0.0
         else:
-            # there are gusts
-            self.wind_efficiency = self.wind_speed / 100  # TODO
+            # not enough or too strong wind
+            self.wind_efficiency = 0.0
 
     def __str__(self) -> str:
         return (f'{self.unix_timestamp} (UTC):' if self.unix_timestamp is not None else '????????????????:') + \
@@ -164,6 +182,11 @@ SECONDS_PER_HOUR = 60 * 60
 SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR
 
 
+def request_url(url: str) -> requests.Response:
+    print("Requesting URL " + url)
+    return requests.get(url)
+
+
 def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneCallApiResponse:
     """
     Requests historic weather data for 24h. Maybe only works for the last 5 days, not sure...
@@ -180,7 +203,8 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
 
     urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=pos.latitude, lon=pos.longitude, dt=dt) for dt in
                        timestamps_to_request]
-    responses: List[requests.Response] = [requests.get(url) for url in urls_to_request]
+
+    responses: List[requests.Response] = [request_url(url) for url in urls_to_request]
 
     resp = OneCallApiResponse.from_responses(responses)
     resp.forecast.limit_to_time_range(
