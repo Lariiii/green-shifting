@@ -87,7 +87,7 @@ def begin_datastream():
             algo_input.append(prepped_datacenter)
 
         # Call Algo
-        # result = algo.predict(algo_input)
+        # result = shift(algo_input)
 
         # Mock Code to test
         mock_dc_1 = datacenters[0]
@@ -106,14 +106,14 @@ def begin_datastream():
                 if changed_dc.name == real_dc.name:
                     real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
 
-        to_send_json = {"shifts": {}, "datacenters": {}}
+        # Create JSON to send
+        to_send_json = {"shifts": [], "datacenters": {}}
         for shift_tuple, value in shift_dictionary.items():
-            to_send_json["shifts"] = {"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value}
+            to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
         for dc in datacenters:
             to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
 
-
-        emit('step_data', {})
+        emit('step_data', to_send_json)
 
 
 if __name__ == "__main__":
@@ -142,4 +142,5 @@ if __name__ == "__main__":
 
     tc.emit("begin_datastream")
     received = tc.get_received()
+    print("")
     print(received)
