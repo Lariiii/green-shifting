@@ -13,9 +13,8 @@ ARG ELECTRICITYMAP_PUBLIC_TOKEN
 
 # Build
 # (note: this will override the world.json that was previously created)
-ADD config /home/src/electricitymap/contrib/config
+ADD react-frontend/config /home/src/electricitymap/contrib/config
 ADD react-frontend ./
-RUN yarn lint
 RUN yarn build-release
 
 EXPOSE 8000
