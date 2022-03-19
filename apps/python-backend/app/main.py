@@ -12,6 +12,7 @@ from flask_socketio import SocketIO, emit
 
 from models import Position, Datacenter
 from openweathermap import request_one_call_timemachine_api
+from utils import unix_timestamp_to_datetime_str
 from algorithm_test import shift
 
 BASE_URL = 'http://127.0.0.1:5000'
@@ -74,7 +75,7 @@ def begin_datastream():
 
     for i in range(data_points_length - 3):
         time.sleep(1)
-        timestamp = datetime.utcfromtimestamp(datacenters[0].environment[i].unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = unix_timestamp_to_datetime_str(datacenters[0].environment[i].unix_timestamp)
         print("\n--- New Hour {} ---".format(timestamp))
 
         # Prep the data objects

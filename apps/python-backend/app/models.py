@@ -9,6 +9,9 @@ class Position:
         self.latitude = latitude
         self.longitude = longitude
 
+    def __str__(self) -> str:
+        return f"lat={self.latitude} lon={self.longitude}"
+
 
 class Datacenter:
     def __init__(self,

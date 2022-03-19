@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import logging
 import requests
 from models import Position
+from utils import unix_timestamp_to_datetime_str
 from typing import Any, Dict, List, Optional, Tuple
 
 # belongs to Mirko - should be deleted later
@@ -16,6 +18,10 @@ WIND_FORCE_MIN_SPEED = 4  # m/s
 WIND_FORCE_BEST_SPEED = 12  # m/s
 WIND_FORCE_MAX_SPEED = 28  # m/s
 WIND_FORCE_MAX_SPEED_GUST = 35  # m/s
+
+logging.basicConfig()
+logger = logging.getLogger("OpenWeatherMap")
+logger.setLevel(logging.INFO)
 
 
 class SingleForecast(object):
@@ -51,21 +57,36 @@ class SingleForecast(object):
 
     def set_cloudiness(self, cloudiness: Optional[int]) -> None:
         self.cloudiness = cloudiness
-        if cloudiness is None or self.sunrise is None or self.unix_timestamp is None or self.sunset is None:
+        if cloudiness is None:
+            logger.debug("solar_efficiency is None because cloudiness was None")
+            self.solar_efficiency = None
+        elif self.sunrise is None:
+            logger.debug("solar_efficiency is None because sunrise was None")
+            self.solar_efficiency = None
+        elif self.unix_timestamp is None:
+            logger.debug("solar_efficiency is None because unix_timestamp was None")
+            self.solar_efficiency = None
+        elif self.sunset is None:
+            logger.debug("solar_efficiency is None because sunset was None")
             self.solar_efficiency = None
         else:
             if self.sunrise < self.unix_timestamp < self.sunset:
                 efficiency = 1 - cloudiness / 100
+                logger.debug(f"cloudiness={cloudiness}% -> max_efficiency={efficiency}")
 
                 # assuming linear increase and decrease of the sun's intensity from sunrise to noon and
                 # from noon to sunset
                 intensity = (self.unix_timestamp - self.sunrise) / (self.sunset - self.sunrise)
                 if intensity > 0.5:  # afternoon
                     intensity -= 0.5
+                logger.debug(f"intensity={intensity}")
 
                 # noinspection PyTypeChecker
-                self.solar_efficiency = round(intensity * efficiency, 3)
+                solar_efficiency = round(intensity * efficiency, 3)
+                self.solar_efficiency = solar_efficiency
+                logger.debug(f"solar_efficiency={solar_efficiency}")
             else:
+                logger.debug("solar_efficiency is 0 because it is night")
                 self.solar_efficiency = 0.0
 
     def set_wind_speed(self, wind_speed: Optional[float], wind_gust: Optional[float]) -> None:
@@ -74,20 +95,27 @@ class SingleForecast(object):
 
         # data source: https://www.suisse-eole.ch/de/windenergie/faq/ab-welcher-windgeschwindigkeit-dreht-eine-windenergieanlage-8/
         if wind_speed is None:
+            logger.debug("wind_efficiency is None because wind_speed was None")
             self.wind_efficiency = None
         elif WIND_FORCE_MIN_SPEED <= wind_speed < WIND_FORCE_MAX_SPEED:
             if wind_gust is None or wind_gust < WIND_FORCE_MAX_SPEED_GUST:
                 if wind_speed >= WIND_FORCE_BEST_SPEED:
+                    logger.debug(f"wind_efficiency is optimal with {wind_speed}m/s wind")
                     self.wind_efficiency = 1.0
                 else:
-                    self.wind_efficiency = \
+                    wind_efficiency = \
                         (wind_speed - WIND_FORCE_MIN_SPEED) / (WIND_FORCE_BEST_SPEED - WIND_FORCE_MIN_SPEED)
                     # noinspection PyTypeChecker
-                    self.wind_efficiency = round(self.wind_efficiency, 3)
+                    self.wind_efficiency = round(wind_efficiency, 3)
+                    logger.debug(f"wind_efficiency of {wind_efficiency} is NOT optimal with {wind_speed}m/s wind")
             else:
+                logger.debug(f"wind_efficiency is 0 because wind_gust of {wind_gust}m/s was too high")
                 # too strong gusts
                 self.wind_efficiency = 0.0
         else:
+            logger.debug(
+                f"wind_efficiency is 0 because wind_speed of {wind_speed}m/s was either too low or too high"
+            )
             # not enough or too strong wind
             self.wind_efficiency = 0.0
 
@@ -129,6 +157,7 @@ class OpenWeatherMapForecast(object):
                             upper: Optional[int],
                             lower_inclusive: bool = True,
                             upper_inclusive: bool = False) -> None:
+        previous_hourly_len = len(self.hourly)
         if lower is not None:
             if lower_inclusive:
                 self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp >= lower]
@@ -140,6 +169,9 @@ class OpenWeatherMapForecast(object):
                 self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp <= upper]
             else:
                 self.hourly = [forecast for forecast in self.hourly if forecast.unix_timestamp < upper]
+
+        new_hourly_len = len(self.hourly)
+        logger.debug(f'kept {new_hourly_len} of {previous_hourly_len} hourly forecasts')
 
     def __str__(self) -> str:
         return f"{len(self.hourly)} Hours\n" + "\n".join([forecast.__str__() for forecast in self.hourly])
@@ -205,7 +237,7 @@ SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR
 
 
 def request_url(url: str) -> requests.Response:
-    print("Requesting URL " + url)
+    logger.debug("Requesting URL " + url)
     return requests.get(url)
 
 
@@ -218,6 +250,7 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
     :return: a forecast with hourly weather data
     """
 
+    logger.info(f"requesting weather information for {pos.__str__()} at {unix_timestamp_to_datetime_str(unix_timestamp)}")
     # Data block contains hourly historical data starting at 00:00 on the requested day and continues until 23:59 on
     # the same day (UTC time)
     unix_timestamp_yesterday = unix_timestamp - SECONDS_PER_DAY
@@ -227,6 +260,8 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
                        timestamps_to_request]
 
     responses: List[requests.Response] = [request_url(url) for url in urls_to_request]
+    logger.info(f"requested weather information for {pos.__str__()} at "
+                f"{' and '.join([unix_timestamp_to_datetime_str(dt) for dt in timestamps_to_request])}")
 
     resp = OneCallApiResponse.from_responses(responses)
     resp.forecast.limit_to_time_range(
@@ -240,11 +275,13 @@ def request_one_call_timemachine_api(pos: Position, unix_timestamp: int) -> OneC
 
 
 if __name__ == '__main__':
+    logger.setLevel(logging.DEBUG)
+
     position = Position(
         latitude=52.5041664,
         longitude=13.4119424
     )  # Berlin
-    unix_time = 1647713846 - 400000
+    unix_time = 1647713846 - 200000
 
     response = request_one_call_timemachine_api(position, unix_time)
     print(response)
