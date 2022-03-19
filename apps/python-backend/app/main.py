@@ -12,6 +12,7 @@ from flask_socketio import SocketIO, emit
 
 from models import Position, Datacenter
 from openweathermap import request_one_call_timemachine_api
+from algorithm_test import shift
 
 BASE_URL = 'http://127.0.0.1:5000'
 
@@ -87,18 +88,11 @@ def begin_datastream():
             algo_input.append(prepped_datacenter)
 
         # Call Algo
-        # result = shift(algo_input)
-
-        # Mock Code to test
-        mock_dc_1 = datacenters[0]
-        mock_dc_1.datacenter_vm_count_0 = mock_dc_1.datacenter_vm_count_0 - 200
-        mock_dc_2 = datacenters[1]
-        mock_dc_2.datacenter_vm_count_0 = mock_dc_2.datacenter_vm_count_0 + 200
-        mock_result = ({(mock_dc_1, mock_dc_2): 200}, [mock_dc_1, mock_dc_2])
+        result = shift(algo_input)
 
         # Integrate back into out DB
-        shift_dictionary = mock_result[0]
-        changed_dcs = mock_result[1]
+        shift_dictionary = result[0]
+        changed_dcs = result[1]
 
         # Don't Blame me for my nice code :D
         for changed_dc in changed_dcs:
@@ -110,6 +104,7 @@ def begin_datastream():
         to_send_json = {"shifts": [], "datacenters": {}}
         for shift_tuple, value in shift_dictionary.items():
             to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
+            print("Shifted {} VMs from {} to {}".format(shift_tuple[0].name, shift_tuple[1].name, value))
         for dc in datacenters:
             to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
 
@@ -136,7 +131,7 @@ if __name__ == "__main__":
                             "latitude": 13.4119424,
                             "windpower_kwh": 2000,
                             "solarpower_kwh": 2000,
-                            "datacenter_vm_count_0": 2000}
+                            "datacenter_vm_count_0": 100}
     tc.emit("create_datacenters", example_datacenter_2)
 
 
