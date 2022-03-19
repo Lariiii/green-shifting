@@ -4,24 +4,28 @@ aircontrol ewfs blinds api
 Control your Warema EWFS blinds via 433.92 MHz protocol and aircontrol backend
 See: https://github.com/rfkd/aircontrol
 """
+import math
 import os
 import glob
 import logging
+import time
+from datetime import datetime, date, timedelta
 from os import path
 from io import BytesIO
 
-from flask import Flask, send_from_directory #, render_template
+from flask import Flask, send_from_directory, request  # , render_template
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+
+from models import Position
+from openweathermap import request_one_call_timemachine_api
 
 import gphoto2 as gp
 from PIL import Image, ImageOps
 
-
 BASE_URL = 'http://127.0.0.1:5000'
 IMAGE_DIRECTORY = 'tmp'
 IMAGE_SIZE = 1000
-
 
 logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,73 +39,64 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
-
-@app.route(f"/{ IMAGE_DIRECTORY }/<path:path>")
-def serve_images(path):
-    return send_from_directory(IMAGE_DIRECTORY, path)
-
-# @app.route('/')
-# def home():
-#     return render_template('index.html')
-
-# @app.route('/enpoint/<int:id>', methods=['POST'])
-# def endpoint(id):
-#     return ('', 200)
-
-# @socketio.on('message')
-# def handle_message(data):
-#     print('received message: ' + data)
-
-# @socketio.on('json')
-# def handle_json(json):
-#     print('received json: ' + str(json))
+datacenters = []
+data_points_length = 0
 
 
 @socketio.event
-def get_cameras(json):
-    cameras = gp.Camera.autodetect()
-    cameras_json = { name: value for (name, value) in cameras }
-    emit('cameras', cameras_json, broadcast=True)
+def create_datacenters(datacenter_json):
+    # JSON Format
+    example_json = {"name": "",
+                    "company": "",
+                    "longitude": 0,
+                    "latitude": 0,
+                    "windpower_kwh": 0,
+                    "solarpower_kwh": 0,
+                    "datacenter_vm_count": 1000}
+
+    print(datacenter_json)
+    global datacenters
+    global data_points_length
+
+    # Request Today
+    now = datetime.today()
+    now.replace(minute=0, second=0)
+    unix_now = math.floor(time.mktime(now.timetuple()))
+
+    # Call Mirko API
+    position = Position(
+        latitude=datacenter_json["latitude"],
+        longitude=datacenter_json["longitude"])
+    environment_data = request_one_call_timemachine_api(position, unix_now).forecast.hourly
+    data_points_length = len(environment_data)
+    datacenter_json["environment_data"] = environment_data
+    datacenters.append(datacenter_json)
 
 @socketio.event
-def get_latest_images(json):
-    count = json['count']
-    list_of_files = glob.glob(f"{ IMAGE_DIRECTORY }/*.jpg")
-    sorted_list = sorted(list_of_files, key=os.path.getctime, reverse=True)[:count]
-    urls = [ path.join(BASE_URL, target) for target in sorted_list ]
-    emit('latest_images', urls, broadcast=True)
-    return urls
+def begin_datastream():
+    global datacenters, data_points_length
+
+    for i in range(data_points_length):
+        time.sleep(1)
+
+        # Prep the data objects
+        for datacenter in datacenters:
+            mini_datacenter = []
+
+        # Call Algo
+
+
+
+
+
+
+
 
 @socketio.event
-def capture():
-    try:
-        camera = gp.Camera()
-        camera.init()
-
-        # Capture image
-        file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-
-        # Creating file name 
-        target = path.join(IMAGE_DIRECTORY, file_path.name.lower())
-        
-        # Loading image from camera and shrinking to IMAGE_SIZE 
-        camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-        with BytesIO(camera_file.get_data_and_size()) as file:
-            img = Image.open(file)
-            img.thumbnail(size=(IMAGE_SIZE, IMAGE_SIZE))
-            transposed_img = ImageOps.exif_transpose(img)
-            transposed_img.save(target)
-
-        # Emit new image url
-        emit('new_image', path.join(BASE_URL, target), broadcast=True)
-        
-        camera.exit()
-    except Exception as e:
-        emit('error', f"Capturing failed: { e }")
-        logger.exception(f"Capturing failed: { e }")
+def end_datastream(datacenter_json):
+    # TODO
+    pass
 
 
 if __name__ == "__main__":
-
     socketio.run(app=app, host='127.0.0.1', debug=True)
