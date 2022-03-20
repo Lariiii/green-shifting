@@ -1,8 +1,10 @@
+import {useRefWidthHeightObserver} from "../hooks/viewport";
+
 var PewpewAnimation = function( params ){
 
   var PEWPEW_LINE_WIDTH = 5;
   var percent = 0;
-  
+
   /*
   var project = function( lat, lon, pewpew) { // both in radians, use deg2rad if neccessary
     return params.project([lon, lat]);
@@ -47,7 +49,8 @@ var PewpewAnimation = function( params ){
         // if we take any longer than that, then scale the opacity
         // inversely with the time
 
-        g.clearRect( 0, 0, 800, 800 );
+        // reset canvas
+        //g.clearRect( 0, 0,  2000, 2000);
 
         for (var i=0; i < params.data.length; i++) {
           var d = params.data[i];
@@ -74,6 +77,7 @@ var PewpewAnimation = function( params ){
       }
       pewpew.animationRequest = requestAnimationFrame(frame);
     };
+
     frame();
   }
 

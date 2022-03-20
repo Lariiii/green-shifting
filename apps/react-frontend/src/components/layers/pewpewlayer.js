@@ -175,7 +175,7 @@ export default ({ project, unproject }) => {
       w.start(...viewport);
       // Set in the next render cycle.
       setTimeout(() => { setPewpew(w); }, 0);
-      setTimeout(() => { setPewpew(null); }, 900);
+      setTimeout(() => { setPewpew(null); node.getContext("2d").clearRect( 0, 0,  2000, 2000); }, 950);
     } else if (pewpew && !isVisible) {
       pewpew.stop();
       setPewpew(null);

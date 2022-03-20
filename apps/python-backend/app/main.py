@@ -76,15 +76,15 @@ def create_datacenters(datacenter_json):
     unix_now_yesterday = math.floor(time.mktime(yesterday.timetuple()))
 
     # Call Mirko API
-    environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
+    a = request_one_call_timemachine_api(datacenter.position, unix_now)
+    environment_data = a.forecast.hourly
     environment_data_yest = request_one_call_timemachine_api(datacenter.position, unix_now_yesterday).forecast.hourly
 
-    data_points_length = len(environment_data)
     datacenter.environment = [*environment_data_yest, *environment_data]
     datacenters.append(datacenter)
-
-    print("Data Length: {}".format(data_points_length))
-
+    data_points_length = len(datacenter.environment)
+    if data_points_length == 0:
+        print("WARNING: API probably exceeded!")
 
 @socketio.event
 def begin_datastream():
