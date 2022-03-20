@@ -66,24 +66,6 @@ export default () => {
 
 return (
   <div className="layer-buttons-container">
-    <Link to={windToggledLocation} hasError={windDataError}>
-      <ButtonToggle
-        active={windEnabled}
-        tooltip={__(windEnabled ? 'tooltips.hideWindLayer' : 'tooltips.showWindLayer')}
-        errorMessage={windDataError}
-        ariaLabel={__(windEnabled ? 'tooltips.hideWindLayer' : 'tooltips.showWindLayer')}
-        icon="weather/wind"
-      />
-    </Link>
-    <Link to={solarToggledLocation} hasError={solarDataError}>
-      <ButtonToggle
-        active={solarEnabled}
-        tooltip={__(solarEnabled ? 'tooltips.hideSolarLayer' : 'tooltips.showSolarLayer')}
-        errorMessage={solarDataError}
-        ariaLabel={__(solarEnabled ? 'tooltips.hideSolarLayer' : 'tooltips.showSolarLayer')}
-        icon="weather/sun"
-      />
-    </Link>
     <ButtonToggle
       active={brightModeEnabled}
       onChange={toggleBrightMode}
