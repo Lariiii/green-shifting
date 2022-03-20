@@ -8,7 +8,7 @@ from utils import unix_timestamp_to_datetime_str
 from typing import Any, Dict, List, Optional, Tuple
 
 # belongs to Mirko - should be deleted later
-API_KEY = "720ad709ee32204a850f50794813a928"
+API_KEY = "ed8d992385ca6f2ae87669b34679bbe8"
 
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 ONE_CALL_API_URL = f"{BASE_URL}/onecall?lat={{lat}}&lon={{lon}}&exclude=alerts,minutely,daily&appid={API_KEY}"
@@ -134,7 +134,8 @@ class SingleForecast(object):
 
     def log_efficiency(self, level: int = logging.INFO) -> None:
         # noinspection PyTypeChecker
-        logger.log(level, f"{unix_timestamp_to_datetime_str(self.unix_timestamp)}@{self.position.__str__()}: {round(self.solar_efficiency * 100) if self.solar_efficiency is not None else '?'} % solar and {round(self.wind_efficiency * 100) if self.wind_efficiency is not None else '?'} % wind efficiency")
+        logger.log(level,
+                   f"{unix_timestamp_to_datetime_str(self.unix_timestamp)}@{self.position.__str__()}: {round(self.solar_efficiency * 100) if self.solar_efficiency is not None else '?'} % solar and {round(self.wind_efficiency * 100) if self.wind_efficiency is not None else '?'} % wind efficiency")
 
     @staticmethod
     def from_json_dict(
@@ -266,13 +267,15 @@ def request_one_call_timemachine_api(position: Position, unix_timestamp: int) ->
     :return: a forecast with hourly weather data
     """
 
-    logger.info(f"requesting weather information for {position.__str__()} at {unix_timestamp_to_datetime_str(unix_timestamp)}")
+    logger.info(
+        f"requesting weather information for {position.__str__()} at {unix_timestamp_to_datetime_str(unix_timestamp)}")
     # Data block contains hourly historical data starting at 00:00 on the requested day and continues until 23:59 on
     # the same day (UTC time)
     unix_timestamp_yesterday = unix_timestamp - SECONDS_PER_DAY
     timestamps_to_request = [unix_timestamp_yesterday, unix_timestamp]
 
-    urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=position.latitude, lon=position.longitude, dt=dt) for dt in
+    urls_to_request = [ONE_CALL_TIMEMACHINE_API_URL.format(lat=position.latitude, lon=position.longitude, dt=dt) for dt
+                       in
                        timestamps_to_request]
 
     responses: List[requests.Response] = [request_url(url) for url in urls_to_request]
