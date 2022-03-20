@@ -7,14 +7,14 @@ import OpenPositionsBadge from '../components/openpositionsbadge';
 const logo = resolvePath('images/electricitymap-logo.svg');
 
 const headerLinks = [
-  {
+  /*{
     label: 'Live',
     active: true,
-  },
-  {
+  },*/
+  /*{
     label: 'Github',
     href: 'https://github.com/Lariiii/green-shifting',
-  },
+  },*/
 ];
 
 const Container = styled.div`
