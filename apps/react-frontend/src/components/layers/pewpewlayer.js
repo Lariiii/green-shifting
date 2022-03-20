@@ -65,7 +65,12 @@ export default ({ project, unproject }) => {
                 const new_dcs_values = step_data["dataCenters"]
                 const ts = step_data["unix_timestamp"]
 
-                document.getElementById("clock").innerHTML = `${ new Date(ts).getHours().toString().padStart(2, '0') }:${ new Date(ts).getMinutes().toString().padStart(2, '0') }`;
+                let d = new Date(ts);
+                let month = (d.getMonth() + 1).toString().padStart(2, '0');
+                let day = d.getDate().toString().padStart(2, '0');
+                let year = d.getFullYear();
+
+                document.getElementById("clock").innerHTML = `${ day }.${ month }.${ year }, ${ d.getHours().toString().padStart(2, '0') }:${ d.getMinutes().toString().padStart(2, '0') }`;
 
                 console.log(shifts)
                 setPewpewlines(shifts)
