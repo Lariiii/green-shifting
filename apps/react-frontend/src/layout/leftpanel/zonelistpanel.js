@@ -75,17 +75,25 @@ export const Button = styled.button`
   font-size: 20px;
   color: #fff;
 `;
-
-
+/*
+const [location, setLocation] = useState('');
+const [company, setCompany] = useState('');
+const [pvSize, setpvSize] = useState(0);
+const [vmNumber, setVmNumber] = useState(0);
+const [windSize, setWindSize] = useState(0);
+const [lat, setLat] = useState(0);
+const [lon, setLon] = useState(0);*/ 
 
 const ZoneListPanel = ({
-  onChange, locationName, companyName, pvSize, vmNumber, windSize, lat, lon 
+  //onChange, locationName, companyName, pvSize, vmNumber, windSize, lat, lon 
 }) => {
 
 
   function sendData() {
     console.log("not yet implemented")
   }
+
+  function dummy() {}
 
   return(
     <div className="left-panel-zone-list">
@@ -98,30 +106,30 @@ const ZoneListPanel = ({
       </div>
 
       <h3>Location name</h3>
-      <StyledInput type="text" onChange={onChange} onInput={onChange} value={locationName}></StyledInput>
+      <StyledInput type="text" onChange={dummy} onInput={dummy} value={''}></StyledInput>
       <Spacer />
 
       <h3>Company</h3>
-      <StyledInput type="text" onChange={onChange} onInput={onChange} value={companyName}></StyledInput>
+      <StyledInput type="text" onChange={dummy} onInput={dummy} value={''}></StyledInput>
       <Spacer />
 
       <h3>Location</h3>
       <Row>
-        <StyledInput placeholder="Latitude" type="text" onChange={onChange} onInput={onChange} value={lat}></StyledInput><Spacer />
-        <StyledInput placeholder="Longitude" type="text" onChange={onChange} onInput={onChange} value={lon}></StyledInput>
+        <StyledInput placeholder="Latitude" type="text" onChange={dummy} onInput={dummy} value={''}></StyledInput><Spacer />
+        <StyledInput placeholder="Longitude" type="text" onChange={dummy} onInput={dummy} value={''}></StyledInput>
       </Row>
       <Spacer />
 
-      <h3>Number of VMs</h3>
-      <RangeInput type="range" min="0" max="10000" value={vmNumber} onChange={onChange} onInput={onChange}></RangeInput> { vmNumber }
+      <h3>Number of VMs: 500</h3>
+      <RangeInput type="range" min="0" max="10000" value={''} onChange={dummy} onInput={dummy}></RangeInput> { '' }
       <Spacer />
 
-      <h3>Size of photovoltaics</h3>
-      <RangeInput type="range" value={pvSize} onChange={onChange} onInput={onChange}></RangeInput> { pvSize } kWh
+      <h3>Size of photovoltaics: 500 kWh</h3>
+      <RangeInput type="range" value={''} onChange={dummy} onInput={dummy}></RangeInput> 
       <Spacer />
 
-      <h3>Size of wind turbines</h3>
-      <RangeInput type="range" value={windSize} onChange={onChange} onInput={onChange}></RangeInput> { windSize } kWh
+      <h3>Size of wind turbines: 500 kWh</h3>
+      <RangeInput type="range" value={''} onChange={dummy} onInput={dummy}></RangeInput> 
       <Spacer />
 
       <Button onClick={sendData}>

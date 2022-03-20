@@ -37,6 +37,7 @@ var PewpewAnimation = function( params ){
   var animate = function() {
 
     var g = params.canvas.getContext("2d");
+    g.clearRect(0, 0, g.width, g.height);
     g.lineWidth = PEWPEW_LINE_WIDTH;
     g.strokeStyle = "#62B252";
 

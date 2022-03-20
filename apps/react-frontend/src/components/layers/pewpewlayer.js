@@ -63,7 +63,9 @@ export default ({ project, unproject }) => {
             socket.on("step_data", async (step_data) => {
                 const shifts = step_data["shifts"]
                 const new_dcs_values = step_data["dataCenters"]
-                const timestamp = step_data["unix_timestamp"]
+                const ts = step_data["unix_timestamp"]
+
+                document.getElementById("clock").innerHTML = `${ new Date(ts).getHours().toString().padStart(2, '0') }:${ new Date(ts).getMinutes().toString().padStart(2, '0') }`;
 
                 console.log(shifts)
                 setPewpewlines(shifts)

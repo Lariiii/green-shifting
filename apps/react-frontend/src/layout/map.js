@@ -115,9 +115,9 @@ export default () => {
 
   const handleZoneClick = useMemo(
     () => (id) => {
-      /*trackEvent('countryClick');
+      trackEvent('countryClick');
       dispatchApplication('isLeftPanelCollapsed', false);
-      history.push({ pathname: `/zone/${id}`, search: location.search });*/
+      history.push({ pathname: `/zone/${id}`, search: location.search });
     },
     [trackEvent, history, location],
   );
