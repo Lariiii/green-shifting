@@ -32,8 +32,8 @@ The Python Backend and the React Frontend are connected through a web socket for
 
 ## Accomplishments that we're proud of
 * large improvement of green energy consumption through shifting algorithm as the workload gets distributed to locations with remaining green energy resources
-  * green energy consumption without shifting: 0,18%
-  * green energy consumption with shifting: 0,58%
+  * green energy consumption without shifting: 18%
+  * green energy consumption with shifting: 58%
 * shifting algorithm
 * animated shifting arrows
 * real-time simulation
