@@ -1,5 +1,6 @@
-# green shifting
+![Green Shifting in a Nutshell](assets/img/headline_logo.png)
 
+## Screencast
 ![Screencast](assets/img/screencast.gif)
 
 ## Inspiration
@@ -11,7 +12,7 @@ Our platform simulates multiple data centres and their workloads placed across t
 ## How we built it
 
 ### Data Warehousing
-The weather forecasts for solar and wind efficiencies were queried from [Open Weather](https://openweathermap.org/).  The location of the data centres as well as their workload and green energy production data are being processed to compute the optimal shifting operations. The data centres can be specified through the visualization dashboard. This logic was programmed in a Python Backend.
+The weather forecasts for solar and wind efficiencies were queried from [Open Weather Map](https://openweathermap.org/).  The location of the data centres as well as their workload and green energy production data are being processed to compute the optimal shifting operations. The data centres can be specified through the visualization dashboard. This logic was programmed in a Python Backend.
 
 ### Simulation Engine
 The simulation algorithm predicts the necessary shifts of workloads to optimize the green energy consumption. Both the algorithm and the whole necessary data science component are implemented in the Python Backend.
