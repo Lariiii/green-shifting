@@ -136,7 +136,7 @@ def begin_datastream():
                 real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
 
     # Create JSON to send
-    to_send_json = {"shifts": [], "datacenters": {}}
+    to_send_json = {"shifts": [], "datacenters": {}, "unix_timestamp": timestamp}
     for shift_tuple, value in shift_dictionary.items():
         to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
         print("Shifted {} VMs from {} to {}".format(value, shift_tuple[0].name, shift_tuple[1].name))
