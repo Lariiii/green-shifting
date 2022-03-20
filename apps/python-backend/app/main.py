@@ -35,6 +35,10 @@ def disconnect():
     global datacenters, data_points_length, index
 
     datacenters = []
+    index = 0
+    data_points_length = 0
+
+    print("Resetted internal state!")
 
 
 @socketio.event
