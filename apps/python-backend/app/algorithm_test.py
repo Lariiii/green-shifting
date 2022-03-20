@@ -17,7 +17,7 @@ def shift(datacenters):
             full[dc] = (dc.datacenter_vm_count_1 - dc.datacenter_vm_count_0)
         elif dc.datacenter_vm_count_1 <= average < dc.datacenter_vm_count_0:
             full[dc] = (average - dc.datacenter_vm_count_0)
-        dc.datacenter_vm_count_1 = -1
+        #dc.datacenter_vm_count_1 = -1
         dc.datacenter_vm_count_2 = -1
         dc.datacenter_vm_count_3 = -1
 
@@ -53,6 +53,10 @@ def shift(datacenters):
     # print(capacities)
     # print(full)
 
+    green_energy = percentage_green_energy(datacenters)
+
+    print(green_energy)
+
     return (shifts, datacenters)
 
 
@@ -70,3 +74,17 @@ def get_nearest_dc(dc, neighbors):
     if nearest_dc == dc:
         raise ValueError('Nearest Datacenter cannot be the datacenter itself')
     return nearest_dc
+
+
+def percentage_green_energy(datacenters):
+    total = 0
+    green = 0
+    for dc in datacenters:
+        total = total+dc.datacenter_vm_count_0
+        if dc.datacenter_vm_count_0 <= dc.datacenter_vm_count_1:
+            green = green+dc.datacenter_vm_count_0
+        else:
+            green = dc.datacenter_vm_count_1
+
+    return (green/total)
+
