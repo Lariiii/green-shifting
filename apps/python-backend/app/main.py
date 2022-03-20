@@ -15,7 +15,7 @@ from openweathermap import request_one_call_timemachine_api
 from utils import unix_timestamp_to_datetime_str
 from algorithm_test import shift
 
-BASE_URL = 'http://127.0.0.1:5000'
+BASE_URL = 'http://0.0.0.0:5000'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -113,30 +113,30 @@ def begin_datastream():
 
 
 if __name__ == "__main__":
-    # socketio.run(app=app, host='127.0.0.1', debug=True)
+    socketio.run(app=app, host='0.0.0.0', debug=True)
 
-    # Tests
-    tc = socketio.test_client(app)
-    example_datacenter_1 = {"name": "DC 1",
-                            "company": "vmware",
-                            "longitude": 55.2321664,
-                            "latitude": 9.5155424,
-                            "windpower_kwh": 2000,
-                            "solarpower_kwh": 2000,
-                            "datacenter_vm_count_0": 2000}
-    tc.emit("create_datacenters", example_datacenter_1)
-
-    example_datacenter_2 = {"name": "DC 2",
-                            "company": "wmware",
-                            "longitude": 52.5041664,
-                            "latitude": 13.4119424,
-                            "windpower_kwh": 2000,
-                            "solarpower_kwh": 2000,
-                            "datacenter_vm_count_0": 100}
-    tc.emit("create_datacenters", example_datacenter_2)
-
-
-    tc.emit("begin_datastream")
-    received = tc.get_received()
-    print("")
-    print(received)
+    # # Tests
+    # tc = socketio.test_client(app)
+    # example_datacenter_1 = {"name": "DC 1",
+    #                         "company": "vmware",
+    #                         "longitude": 55.2321664,
+    #                         "latitude": 9.5155424,
+    #                         "windpower_kwh": 2000,
+    #                         "solarpower_kwh": 2000,
+    #                         "datacenter_vm_count_0": 2000}
+    # tc.emit("create_datacenters", example_datacenter_1)
+    #
+    # example_datacenter_2 = {"name": "DC 2",
+    #                         "company": "wmware",
+    #                         "longitude": 52.5041664,
+    #                         "latitude": 13.4119424,
+    #                         "windpower_kwh": 2000,
+    #                         "solarpower_kwh": 2000,
+    #                         "datacenter_vm_count_0": 100}
+    # tc.emit("create_datacenters", example_datacenter_2)
+    #
+    #
+    # tc.emit("begin_datastream")
+    # received = tc.get_received()
+    # print("")
+    # print(received)

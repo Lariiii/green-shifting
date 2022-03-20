@@ -7,3 +7,4 @@ flask-cors
 flask-socketio
 simple-websocket
 geopy
+eventlet

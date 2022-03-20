@@ -30,6 +30,7 @@ import LoadingOverlay from '../components/loadingoverlay';
 import Toggle from '../components/toggle';
 import useSWR from 'swr';
 import ErrorBoundary from '../components/errorboundary';
+import {DatacenterLoader} from "../components/datacenterLoader";
 
 const CLIENT_VERSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -158,11 +159,12 @@ return (
         alignItems: 'stretch', /* force children to take 100% width */
       }}
     >
-      {headerVisible && <Header />}
+      {headerVisible && <Header/>}
       <div id="inner">
         <ErrorBoundary>
-        <LoadingOverlay visible={showLoadingOverlay} />
-        <LeftPanel />
+          <DatacenterLoader/>
+          <LoadingOverlay visible={showLoadingOverlay}/>
+          <LeftPanel/>
           <MapContainer pathname={location.pathname} id="map-container">
             <Map />
             <Legend />
