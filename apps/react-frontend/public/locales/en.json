@@ -50,8 +50,8 @@
         "now": "Now"
     },
     "left-panel": {
-        "zone-list-header-title": "Climate Impact by Area",
-        "zone-list-header-subtitle": "Ranked by carbon intensity of electricity consumed (gCO₂eq/kWh)",
+        "zone-list-header-title": "Add new location",
+        "zone-list-header-subtitle": "",
         "search": "Search areas"
     },
     "country-history": {

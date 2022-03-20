@@ -115,9 +115,9 @@ export default () => {
 
   const handleZoneClick = useMemo(
     () => (id) => {
-      trackEvent('countryClick');
+      /*trackEvent('countryClick');
       dispatchApplication('isLeftPanelCollapsed', false);
-      history.push({ pathname: `/zone/${id}`, search: location.search });
+      history.push({ pathname: `/zone/${id}`, search: location.search });*/
     },
     [trackEvent, history, location],
   );
@@ -175,7 +175,49 @@ export default () => {
 
   // Animate map transitions only after the map has been loaded.
   const transitionDuration = isLoadingMap ? 0 : 300;
-  const hoveringEnabled = !isHoveringExchange && !isMobile;
+  //const hoveringEnabled = !isHoveringExchange && !isMobile;
+  const hoveringEnabled = false;
+
+  // return (
+  //   <React.Fragment>
+  //     <div id="webgl-error" className={`flash-message ${!webGLSupported ? 'active' : ''}`}>
+  //       <div className="inner">
+  //         {__('misc.webgl-not-supported')}
+  //       </div>
+  //     </div>
+  //     {tooltipPosition && tooltipZoneData && hoveringEnabled && (
+  //       <MapCountryTooltip
+  //         zoneData={tooltipZoneData}
+  //         position={tooltipPosition}
+  //         onClose={() => setTooltipZoneData(null)}
+  //       />
+  //     )}
+  //     <ZoneMap
+  //       hoveringEnabled={hoveringEnabled}
+  //       onMapLoaded={handleMapLoaded}
+  //       onMapError={handleMapError}
+  //       onMouseMove={handleMouseMove}
+  //       onResize={handleResize}
+  //       onSeaClick={handleSeaClick}
+  //       onViewportChange={handleViewportChange}
+  //       onZoneClick={handleZoneClick}
+  //       onZoneMouseEnter={handleZoneMouseEnter}
+  //       onZoneMouseLeave={handleZoneMouseLeave}
+  //       scrollZoom={!isEmbedded}
+  //       theme={theme}
+  //       transitionDuration={transitionDuration}
+  //       viewport={viewport}
+  //       zones={zones}
+  //     >
+  //       <MapLayer component={PewPewLayer} />
+  //       <MapLayer component={DataCenterLayer} />
+  //       <MapLayer component={ExchangeLayer} />
+  //       <MapLayer component={WindLayer} />
+  //       <MapLayer component={SolarLayer} />
+        
+  //     </ZoneMap>
+  //   </React.Fragment>
+  // );
 
   return (
     <React.Fragment>
@@ -210,7 +252,6 @@ export default () => {
       >
         <MapLayer component={PewPewLayer} />
         <MapLayer component={DataCenterLayer} />
-        <MapLayer component={ExchangeLayer} />
         <MapLayer component={WindLayer} />
         <MapLayer component={SolarLayer} />
         

@@ -3,7 +3,7 @@
 import copy
 import math
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask  # , render_template
 from flask_cors import CORS
@@ -28,6 +28,17 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 datacenters: List[Datacenter] = []
 data_points_length = 0
 index = 0
+
+
+@socketio.event
+def disconnect():
+    global datacenters, data_points_length, index
+
+    datacenters = []
+    index = 0
+    data_points_length = 0
+
+    print("Resetted internal state!")
 
 
 @socketio.event
@@ -60,11 +71,19 @@ def create_datacenters(datacenter_json):
     # noinspection PyTypeChecker
     unix_now = math.floor(time.mktime(now.timetuple()))
 
+    yesterday = datetime.today() - timedelta(days=1)
+    yesterday.replace(minute=0, second=0)
+    unix_now_yesterday = math.floor(time.mktime(yesterday.timetuple()))
+
     # Call Mirko API
     environment_data = request_one_call_timemachine_api(datacenter.position, unix_now).forecast.hourly
+    environment_data_yest = request_one_call_timemachine_api(datacenter.position, unix_now_yesterday).forecast.hourly
+
     data_points_length = len(environment_data)
-    datacenter.environment = environment_data
+    datacenter.environment = [*environment_data_yest, *environment_data]
     datacenters.append(datacenter)
+
+    print("Data Length: {}".format(data_points_length))
 
 
 @socketio.event
@@ -117,7 +136,7 @@ def begin_datastream():
                 real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
 
     # Create JSON to send
-    to_send_json = {"shifts": [], "datacenters": {}}
+    to_send_json = {"shifts": [], "datacenters": {}, "unix_timestamp": timestamp}
     for shift_tuple, value in shift_dictionary.items():
         to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
         print("Shifted {} VMs from {} to {}".format(value, shift_tuple[0].name, shift_tuple[1].name))
@@ -131,12 +150,12 @@ def begin_datastream():
 if __name__ == "__main__":
     socketio.run(app=app, host='0.0.0.0', debug=True)
 
-    # # Tests
+    # Tests
     # tc = socketio.test_client(app)
     # example_datacenter_1 = {"name": "DC 1",
     #                         "company": "vmware",
-    #                         "longitude": 55.2321664,
-    #                         "latitude": 9.5155424,
+    #                         "longitude": 151.085414,
+    #                         "latitude": -33.882755,
     #                         "windpower_kwh": 2000,
     #                         "solarpower_kwh": 2000,
     #                         "datacenter_vm_count_0": 2000}
@@ -144,8 +163,8 @@ if __name__ == "__main__":
     #
     # example_datacenter_2 = {"name": "DC 2",
     #                         "company": "wmware",
-    #                         "longitude": 52.5041664,
-    #                         "latitude": 13.4119424,
+    #                         "longitude": -22.746257,
+    #                         "latitude": -43.387096,
     #                         "windpower_kwh": 2000,
     #                         "solarpower_kwh": 2000,
     #                         "datacenter_vm_count_0": 100}

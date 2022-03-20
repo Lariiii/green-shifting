@@ -46,9 +46,9 @@ const MobileInfoTab = () => {
   }, []);
 
   // If not on small screen, redirect to the /map page
-  if (isMediumUpScreen) {
-    return <Redirect to={{ pathname: '/map', search: location.search }} />;
-  }
+  //if (isMediumUpScreen) {
+  return <Redirect to={{ pathname: '/map', search: location.search }} />;
+  //}
 
   return (
     <div className="mobile-info-tab">

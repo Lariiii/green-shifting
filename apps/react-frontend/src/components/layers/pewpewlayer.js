@@ -62,6 +62,9 @@ export default ({ project, unproject }) => {
             // Add Pew Pew
             socket.on("step_data", async (step_data) => {
                 const shifts = step_data["shifts"]
+                const new_dcs_values = step_data["dataCenters"]
+                const timestamp = step_data["unix_timestamp"]
+
                 console.log(shifts)
                 setPewpewlines(shifts)
                 socket.emit("begin_datastream")

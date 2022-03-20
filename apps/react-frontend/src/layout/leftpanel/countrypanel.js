@@ -241,6 +241,180 @@ const CountryPanel = ({
   };
 
 
+  // return (
+  //   <CountryPanelStyled>
+  //     <div id="country-table-header">
+  //       <div className="left-panel-zone-details-toolbar">
+  //         <Link to={parentPage}>
+  //           <span className="left-panel-back-button">
+  //             <i className="material-icons" aria-hidden="true">arrow_back</i>
+  //           </span>
+  //         </Link>
+  //         <CountryNameTime>
+  //           <CountryNameTimeTable>
+  //             <div>
+  //               <Flag id="country-flag" alt="" src={flagUri(zoneId, 24)} />
+  //             </div>
+  //             <div style={{ flexGrow: 1 }}>
+  //               <div className="country-name">{getZoneNameWithCountry(zoneId)}</div>
+  //               <CountryTime>
+  //                 {datetime ? moment(datetime).format('LL LT') : ''}
+  //                 {isDataEstimated && <EstimatedLabel isMobile={isMobile} />}
+  //               </CountryTime>
+  //             </div>
+  //             {disclaimer && <CountryDisclaimer text={disclaimer} isMobile={isMobile} />}
+  //           </CountryNameTimeTable>
+  //         </CountryNameTime>
+  //       </div>
+
+  //       {hasData && (
+  //         <React.Fragment>
+  //           <CountryTableHeaderInner>
+  //             <CarbonIntensitySquare value={co2Intensity} withSubtext />
+  //             <div className="country-col country-lowcarbon-wrap">
+  //               <div id="country-lowcarbon-gauge" className="country-gauge-wrap">
+  //                 <CountryLowCarbonGauge
+  //                   onClick={isMobile ? ((x, y) => setTooltip({ position: { x, y } })) : noop}
+  //                   onMouseMove={!isMobile ? ((x, y) => setTooltip({ position: { x, y } })) : noop}
+  //                   onMouseOut={() => setTooltip(null)}
+  //                 />
+  //                 {tooltip && (
+  //                   <LowCarbonInfoTooltip
+  //                     position={tooltip.position}
+  //                     onClose={() => setTooltip(null)}
+  //                   />
+  //                 )}
+  //               </div>
+  //               <div className="country-col-headline">{__('country-panel.lowcarbon')}</div>
+  //               <div className="country-col-subtext" />
+  //             </div>
+  //             <div className="country-col country-renewable-wrap">
+  //               <div id="country-renewable-gauge" className="country-gauge-wrap">
+  //                 <CountryRenewableGauge />
+  //               </div>
+  //               <div className="country-col-headline">{__('country-panel.renewable')}</div>
+  //             </div>
+  //           </CountryTableHeaderInner>
+  //           <div className="country-show-emissions-wrap">
+  //             <div className="menu">
+  //               <a onClick={switchToZoneProduction} className={!tableDisplayEmissions ? 'selected' : null}>
+  //                 {__(`country-panel.electricity${electricityMixMode}`)}
+  //               </a>
+  //               |
+  //               <a onClick={switchToZoneEmissions} className={tableDisplayEmissions ? 'selected' : null}>
+  //                 {__('country-panel.emissions')}
+  //               </a>
+  //             </div>
+  //           </div>
+  //         </React.Fragment>
+  //       )}
+  //     </div>
+
+  //     <CountryPanelWrap>
+  //       {hasData ? (
+  //         <React.Fragment>
+  //           <BySource>
+  //             {__('country-panel.bysource')}
+  //           </BySource>
+
+  //           <CountryTable />
+
+  //           <hr />
+  //           {isDataEstimated && <EstimatedDataInfo />}
+  //           <div className="country-history">
+  //             <CountryHistoryTitle>
+  //               {__(tableDisplayEmissions ? 'country-history.emissions24h' : 'country-history.carbonintensity24h')}
+  //             </CountryHistoryTitle>
+  //             <br />
+  //             <IconContainer>
+  //               <i className="material-icons" aria-hidden="true">file_download</i> <a href="https://electricitymap.org/?utm_source=app.electricitymap.org&utm_medium=referral&utm_campaign=country_panel" target="_blank">{__('country-history.Getdata')}</a>
+  //               <span className="pro"><i className="material-icons" aria-hidden="true">lock</i> pro</span>
+  //             </IconContainer>
+  //             {/* TODO: Make the loader part of AreaGraph component with inferred height */}
+  //             {isLoadingHistories ? <LoadingPlaceholder height="9.2em" /> : (
+  //               tableDisplayEmissions ? <CountryHistoryEmissionsGraph /> : <CountryHistoryCarbonGraph />
+  //             )}
+
+  //             <CountryHistoryTitle>
+  //               {tableDisplayEmissions
+  //                 ? __(`country-history.emissions${electricityMixMode === 'consumption' ? 'origin' : 'production'}24h`)
+  //                 : __(`country-history.electricity${electricityMixMode === 'consumption' ? 'origin' : 'production'}24h`)
+  //               }
+  //             </CountryHistoryTitle>
+  //             <br />
+  //             <IconContainer>
+  //               <i className="material-icons" aria-hidden="true">file_download</i> <a href="https://electricitymap.org/?utm_source=app.electricitymap.org&utm_medium=referral&utm_campaign=country_panel" target="_blank">{__('country-history.Getdata')}</a>
+  //               <span className="pro"><i className="material-icons" aria-hidden="true">lock</i> pro</span>
+  //             </IconContainer>
+  //             {/* TODO: Make the loader part of AreaGraph component with inferred height */}
+  //             {isLoadingHistories ? <LoadingPlaceholder height="11.2em" /> : <CountryHistoryMixGraph />}
+
+  //             <CountryHistoryTitle>
+  //               {__('country-history.electricityprices24h')}
+  //             </CountryHistoryTitle>
+  //             {/* TODO: Make the loader part of AreaGraph component with inferred height */}
+  //             {isLoadingHistories ? <LoadingPlaceholder height="7.2em" /> : <CountryHistoryPricesGraph />}
+  //           </div>
+  //           <hr />
+  //           <div>
+  //             {__('country-panel.source')}
+  //             {': '}
+  //             <a href="https://github.com/tmrowco/electricitymap-contrib/blob/master/DATA_SOURCES.md#real-time-electricity-data-sources" target="_blank">
+  //               <span className="country-data-source">{data.source || '?'}</span>
+  //             </a>
+  //             <small>
+  //               {' '}
+  //               (
+  //               <span
+  //                 dangerouslySetInnerHTML={{
+  //                   __html: __(
+  //                     'country-panel.addeditsource',
+  //                     'https://github.com/tmrowco/electricitymap-contrib/tree/master/parsers',
+  //                   ),
+  //                 }}
+  //               />
+  //               )
+  //             </small>
+  //             {' '}
+  //             {__('country-panel.helpfrom')}
+  //             <ContributorList />
+  //           </div>
+  //         </React.Fragment>
+  //       ) : (
+  //         <div className="zone-details-no-parser-message">
+  //           <span dangerouslySetInnerHTML={{ __html: __('country-panel.noParserInfo', 'https://github.com/tmrowco/electricitymap-contrib/wiki/Getting-started') }} />
+  //         </div>
+  //       )}
+
+  //       <SocialButtons className="social-buttons">
+  //         <div>
+  //           { /* Facebook share */}
+  //           <div
+  //             className="fb-share-button"
+  //             data-href="https://app.electricitymap.org/"
+  //             data-layout="button_count"
+  //           />
+  //           { /* Twitter share */}
+  //           <a
+  //             className="twitter-share-button"
+  //             data-url="https://app.electricitymap.org"
+  //             data-via="electricitymap"
+  //             data-lang={locale}
+  //           />
+  //           { /* Slack */}
+  //           <span className="slack-button">
+  //             <a href="https://slack.tmrow.com" target="_blank" className="slack-btn">
+  //               <span className="slack-ico" />
+  //               <span className="slack-text">Slack</span>
+  //             </a>
+  //           </span>
+  //         </div>
+  //       </SocialButtons>
+  //     </CountryPanelWrap>
+  //   </CountryPanelStyled>
+  // );
+
+
   return (
     <CountryPanelStyled>
       <div id="country-table-header">
@@ -311,105 +485,12 @@ const CountryPanel = ({
       </div>
 
       <CountryPanelWrap>
-        {hasData ? (
-          <React.Fragment>
-            <BySource>
-              {__('country-panel.bysource')}
-            </BySource>
-
-            <CountryTable />
-
-            <hr />
-            {isDataEstimated && <EstimatedDataInfo />}
-            <div className="country-history">
-              <CountryHistoryTitle>
-                {__(tableDisplayEmissions ? 'country-history.emissions24h' : 'country-history.carbonintensity24h')}
-              </CountryHistoryTitle>
-              <br />
-              <IconContainer>
-                <i className="material-icons" aria-hidden="true">file_download</i> <a href="https://electricitymap.org/?utm_source=app.electricitymap.org&utm_medium=referral&utm_campaign=country_panel" target="_blank">{__('country-history.Getdata')}</a>
-                <span className="pro"><i className="material-icons" aria-hidden="true">lock</i> pro</span>
-              </IconContainer>
-              {/* TODO: Make the loader part of AreaGraph component with inferred height */}
-              {isLoadingHistories ? <LoadingPlaceholder height="9.2em" /> : (
-                tableDisplayEmissions ? <CountryHistoryEmissionsGraph /> : <CountryHistoryCarbonGraph />
-              )}
-
-              <CountryHistoryTitle>
-                {tableDisplayEmissions
-                  ? __(`country-history.emissions${electricityMixMode === 'consumption' ? 'origin' : 'production'}24h`)
-                  : __(`country-history.electricity${electricityMixMode === 'consumption' ? 'origin' : 'production'}24h`)
-                }
-              </CountryHistoryTitle>
-              <br />
-              <IconContainer>
-                <i className="material-icons" aria-hidden="true">file_download</i> <a href="https://electricitymap.org/?utm_source=app.electricitymap.org&utm_medium=referral&utm_campaign=country_panel" target="_blank">{__('country-history.Getdata')}</a>
-                <span className="pro"><i className="material-icons" aria-hidden="true">lock</i> pro</span>
-              </IconContainer>
-              {/* TODO: Make the loader part of AreaGraph component with inferred height */}
-              {isLoadingHistories ? <LoadingPlaceholder height="11.2em" /> : <CountryHistoryMixGraph />}
-
-              <CountryHistoryTitle>
-                {__('country-history.electricityprices24h')}
-              </CountryHistoryTitle>
-              {/* TODO: Make the loader part of AreaGraph component with inferred height */}
-              {isLoadingHistories ? <LoadingPlaceholder height="7.2em" /> : <CountryHistoryPricesGraph />}
-            </div>
-            <hr />
-            <div>
-              {__('country-panel.source')}
-              {': '}
-              <a href="https://github.com/tmrowco/electricitymap-contrib/blob/master/DATA_SOURCES.md#real-time-electricity-data-sources" target="_blank">
-                <span className="country-data-source">{data.source || '?'}</span>
-              </a>
-              <small>
-                {' '}
-                (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: __(
-                      'country-panel.addeditsource',
-                      'https://github.com/tmrowco/electricitymap-contrib/tree/master/parsers',
-                    ),
-                  }}
-                />
-                )
-              </small>
-              {' '}
-              {__('country-panel.helpfrom')}
-              <ContributorList />
-            </div>
-          </React.Fragment>
-        ) : (
+        {(
           <div className="zone-details-no-parser-message">
             <span dangerouslySetInnerHTML={{ __html: __('country-panel.noParserInfo', 'https://github.com/tmrowco/electricitymap-contrib/wiki/Getting-started') }} />
           </div>
         )}
 
-        <SocialButtons className="social-buttons">
-          <div>
-            { /* Facebook share */}
-            <div
-              className="fb-share-button"
-              data-href="https://app.electricitymap.org/"
-              data-layout="button_count"
-            />
-            { /* Twitter share */}
-            <a
-              className="twitter-share-button"
-              data-url="https://app.electricitymap.org"
-              data-via="electricitymap"
-              data-lang={locale}
-            />
-            { /* Slack */}
-            <span className="slack-button">
-              <a href="https://slack.tmrow.com" target="_blank" className="slack-btn">
-                <span className="slack-ico" />
-                <span className="slack-text">Slack</span>
-              </a>
-            </span>
-          </div>
-        </SocialButtons>
       </CountryPanelWrap>
     </CountryPanelStyled>
   );

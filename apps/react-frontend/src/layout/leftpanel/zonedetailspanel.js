@@ -43,16 +43,7 @@ const ZoneDetailsPanel = ({ selectedZoneTimeIndex }) => {
   return (
     <div className="left-panel-zone-details">
       <CountryPanel />
-      <div className="detail-bottom-section">
-        <TimeSlider
-          className="zone-time-slider"
-          onChange={handleZoneTimeIndexChange}
-          selectedTimeIndex={selectedZoneTimeIndex}
-          datetimes={datetimes}
-          startTime={startTime}
-          endTime={endTime}
-        />
-      </div>
+      
     </div>
   );
 };
