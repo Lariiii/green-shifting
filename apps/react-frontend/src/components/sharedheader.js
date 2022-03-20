@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 
+import Clock from './clock';
+
 const Wrapper = styled.header`
   align-items: center;
   background: white;
@@ -163,6 +165,7 @@ const SharedHeader = ({
         </Link>
       ))}
     </ResponsiveMenu>
+    <Clock />
   </Wrapper>
 );
 

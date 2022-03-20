@@ -4,9 +4,7 @@ import styled from 'styled-components';
 import SharedHeader from '../components/sharedheader';
 import OpenPositionsBadge from '../components/openpositionsbadge';
 
-//const logo = resolvePath('images/electricitymap-logo.svg');
-
-const logo = '';
+const logo = resolvePath('images/electricitymap-logo.svg');
 
 const headerLinks = [
   {

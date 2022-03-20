@@ -61,6 +61,7 @@ const initialDataState = {
   pewpewlines: [
     { 'from': 'Lappland', 'to': 'HPI'},
   ],
+  timestamp: 1647742852,
 };
 
 const reducer = (state = initialDataState, action) => {
