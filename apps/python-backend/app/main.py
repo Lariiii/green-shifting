@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import copy
-import logging
 import math
 import time
 from datetime import datetime
@@ -46,7 +45,8 @@ def create_datacenters(datacenter_json):
 
     datacenter = Datacenter(name=datacenter_json["name"],
                             company=datacenter_json["company"],
-                            position=Position(latitude=datacenter_json["latitude"], longitude=datacenter_json["longitude"]),
+                            position=Position(latitude=datacenter_json["latitude"],
+                                              longitude=datacenter_json["longitude"]),
                             windpower_kwh=datacenter_json["windpower_kwh"],
                             solarpower_kwh=datacenter_json["solarpower_kwh"],
                             datacenter_vm_count_0=datacenter_json["datacenter_vm_count_0"])
@@ -57,6 +57,7 @@ def create_datacenters(datacenter_json):
     # Request Today
     now = datetime.today()
     now.replace(minute=0, second=0)
+    # noinspection PyTypeChecker
     unix_now = math.floor(time.mktime(now.timetuple()))
 
     # Call Mirko API
@@ -74,7 +75,7 @@ def begin_datastream():
         VM_KWH_CONSUMPTION = 1
         wind_kwh = datacenter_obj.windpower_kwh * datacenter_obj.environment[index].wind_efficiency
         solar_kwh = datacenter_obj.solarpower_kwh * datacenter_obj.environment[index].solar_efficiency
-        non_cooling_kwh = math.floor((wind_kwh+solar_kwh)/2.65)
+        non_cooling_kwh = math.floor((wind_kwh + solar_kwh) / 2.65)
 
         print("{}: S: {} => {}, W: {} => {}".format(datacenter_obj.name,
                                                     solar_kwh,
@@ -82,6 +83,7 @@ def begin_datastream():
                                                     wind_kwh,
                                                     datacenter_obj.environment[index].wind_efficiency))
 
+        # noinspection PyTypeChecker
         return math.floor(non_cooling_kwh / VM_KWH_CONSUMPTION)
 
     if index + 2 >= len(datacenters[0].environment):
