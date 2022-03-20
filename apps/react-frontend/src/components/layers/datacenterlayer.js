@@ -57,9 +57,7 @@ export default ({ project, unproject }) => {
       const ctx = node.getContext('2d');
       ctx.clearRect(0, 0, width, height);
 
-      const d = 50;
-
-      
+      const d = 75;
 
       for (var i=0; i < datacentersData.length; i++) {
 
@@ -68,10 +66,9 @@ export default ({ project, unproject }) => {
 
         var img = new Image();
         img.onload = function() {
-          ctx.drawImage(img, x-(d/2) , y-(d/2), d, d);
+          ctx.drawImage(img, x-(d/2) , y-d, d, d);
         }
         img.src = "/images/datacenter.svg"
-        //ctx.drawImage('/images/datacenter.svg', x+(d/2) , y+(d/2), d, d);
       }
 
     }
