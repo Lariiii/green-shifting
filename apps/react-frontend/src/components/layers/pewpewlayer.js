@@ -3,12 +3,13 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import { useSelector } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import { CSSTransition } from 'react-transition-group';
 import styled from 'styled-components';
 import PewpewAnimation from '../../helpers/animatePewpew';
 
 import { useRefWidthHeightObserver } from '../../hooks/viewport';
+import {io} from "socket.io-client";
 
 const Canvas = styled.canvas`
   top: 0;
@@ -29,11 +30,44 @@ export default ({ project, unproject }) => {
   const [pewpew, setPewpew] = useState(null);
 
   const datacentersData = useSelector(state => state.data.dataCenters);
-  const pewpewlines = useSelector(state => state.data.pewpewlines);
+  const [pewpewlines, setPewpewlines] = useState([]);
 
   const isMapLoaded = useSelector(state => !state.application.isLoadingMap);
   const isMoving = useSelector(state => state.application.isMovingMap);
   const isVisible = enabled && isMapLoaded && !isMoving;
+
+  let [hasConnected, setHasConnected] = useState(false)
+    const dcs = useSelector(state => state.data.dataCenters)
+
+    if (!hasConnected) {
+        const dispatch = useDispatch()
+        const socket = io("ws://127.0.0.1:5000", {
+            transports: ["websocket"],
+            withCredentials: true,
+            path: "/socket.io"
+        });
+
+        console.log("Rendering Custom Socket IO 8!")
+        setHasConnected(true)
+        socket.on("connect", () => {
+            console.log("connected")
+            console.log(dcs)
+            for (var i = 0; i < dcs.length; i++) {
+                socket.emit("create_datacenters", dcs[i]);
+            }
+
+            // Start Data Stream
+            socket.emit("begin_datastream")
+
+            // Add Pew Pew
+            socket.on("step_data", async (step_data) => {
+                const shifts = step_data["shifts"]
+                console.log(shifts)
+                setPewpewlines(shifts)
+                socket.emit("begin_datastream")
+            })
+        });
+    }
 
   const viewport = useMemo(
     () => {
@@ -114,8 +148,8 @@ export default ({ project, unproject }) => {
 
       if (fromDatacenter && toDatacenter) {
         data.push({ 
-          'from': project([fromDatacenter.lon, fromDatacenter.lat]),
-          'to': project([toDatacenter.lon, toDatacenter.lat])
+          'from': project([fromDatacenter.longitude, fromDatacenter.latitude]),
+          'to': project([toDatacenter.longitude, toDatacenter.latitude])
         });
       }
     }
@@ -138,6 +172,7 @@ export default ({ project, unproject }) => {
       w.start(...viewport);
       // Set in the next render cycle.
       setTimeout(() => { setPewpew(w); }, 0);
+      setTimeout(() => { setPewpew(null); }, 900);
     } else if (pewpew && !isVisible) {
       pewpew.stop();
       setPewpew(null);
