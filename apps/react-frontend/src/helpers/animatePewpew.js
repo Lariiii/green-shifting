@@ -38,7 +38,7 @@ var PewpewAnimation = function( params ){
 
     var g = params.canvas.getContext("2d");
     g.lineWidth = PEWPEW_LINE_WIDTH;
-    g.fillStyle = "#62B252";
+    g.strokeStyle = "#62B252";
 
     var lastFrameTime = Date.now();
     function draw() {
@@ -46,44 +46,13 @@ var PewpewAnimation = function( params ){
         // 16 ms ~ 60 fps
         // if we take any longer than that, then scale the opacity
         // inversely with the time
-        var b = deltaMs < 16 ? 1 : 16 / deltaMs;
-
-        // // Fade existing particle trails.
-        // g.globalCompositeOperation = "destination-in";
-        // // This is the parameter concerning the fade property/bug
-        // g.globalAlpha = Math.pow(0.9, b);
-        // g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        // // Prepare for drawing a new particle
-        // g.globalCompositeOperation = "source-over";
-        // g.globalAlpha = 1;
-
-        // // Draw new particle trails.
-        // buckets.forEach(function(bucket, i) {
-        //     if (bucket.length > 0) {
-        //         g.beginPath();
-        //         g.strokeStyle = colorStyles[i];
-        //         g.lineWidth = 1 + 0.25 * i;
-        //         bucket.forEach(function(particle) {
-        //             g.moveTo(particle.x, particle.y);
-        //             g.lineTo(particle.xt, particle.yt);
-        //             particle.x = particle.xt;
-        //             particle.y = particle.yt;
-        //         });
-        //         g.stroke();
-        //     }
-        // });
 
         g.clearRect( 0, 0, 800, 800 );
 
-        for (var i=0; i< params.data.length; i++) {
+        for (var i=0; i < params.data.length; i++) {
           var d = params.data[i];
 
-          const [ fromX, fromY ] = d.from;
-          const [ toX, toY ] = d.to;
-
-
           g.beginPath();
-
           drawCurvePath( 
               g,
               d.from,
@@ -91,17 +60,9 @@ var PewpewAnimation = function( params ){
               0.2,
               percent
           );
-
           g.stroke();
 
           percent = ( percent + 1 ) % 100;
-        
-
-          /*g.beginPath();
-          g.moveTo(fromX, posY);
-          g.lineTo(toX, posY+lineLength);
-          g.stroke();*/
-
         }
 
     }
