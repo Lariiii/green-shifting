@@ -12,6 +12,7 @@ from flask_socketio import SocketIO, emit
 
 from models import Position, Datacenter
 from openweathermap import request_one_call_timemachine_api
+from typing import List
 from utils import unix_timestamp_to_datetime_str
 from algorithm_test import shift
 
@@ -25,7 +26,7 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-datacenters: list[Datacenter] = []
+datacenters: List[Datacenter] = []
 data_points_length = 0
 index = 0
 
@@ -83,6 +84,9 @@ def begin_datastream():
 
         return math.floor(non_cooling_kwh / VM_KWH_CONSUMPTION)
 
+    if index + 2 >= len(datacenters[0].environment):
+        index = 0
+
     timestamp = unix_timestamp_to_datetime_str(datacenters[0].environment[index].unix_timestamp)
     time.sleep(1)
     print("\n--- New Hour {} ---".format(timestamp))
@@ -114,7 +118,7 @@ def begin_datastream():
     to_send_json = {"shifts": [], "datacenters": {}}
     for shift_tuple, value in shift_dictionary.items():
         to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
-        print("Shifted {} VMs from {} to {}".format(shift_tuple[0].name, shift_tuple[1].name, value))
+        print("Shifted {} VMs from {} to {}".format(value, shift_tuple[0].name, shift_tuple[1].name))
     for dc in datacenters:
         to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
 
