@@ -54,19 +54,47 @@ const initialDataState = {
   solarDataError: null,
   windDataError: null,
   dataCenters: [
-    { 'name': 'HPI', 'lat': 52.39213929283949, 'lon': 13.124911168035899 },
-    { 'name': 'Lima', 'lat': -12.062866, 'lon': -77.033793 },
-    { 'name': 'Lappland', 'lat': 65.582530, 'lon': 22.158004 }
+    {
+      'name': 'HPI',
+      "company": "vmware",
+      'latitude': 52.39213929283949,
+      'longitude': 13.124911168035899,
+      "windpower_kwh": 2000,
+      "solarpower_kwh": 2000,
+      "datacenter_vm_count_0": 3000
+    },
+    {
+      'name': 'Lima',
+      "company": "vmware",
+      'latitude': 50.373313,
+      'longitude': 30.447012,
+      "windpower_kwh": 20000,
+      "solarpower_kwh": 8000,
+      "datacenter_vm_count_0": 0,
+    },
+    {
+      'name': 'Lappland',
+      "company": "vmware",
+      'latitude': 65.582530,
+      'longitude': 22.158004,
+      "windpower_kwh": 2000,
+      "solarpower_kwh": 2000,
+      "datacenter_vm_count_0": 3000,
+    },
   ],
-  pewpewlines: [
-    { 'from': 'Lappland', 'to': 'HPI'},
-  ],
+  pewpewlines: {
+    "shifts": [{'from': 'Lappland', 'to': 'HPI'}]
+  },
 };
 
 const reducer = (state = initialDataState, action) => {
   switch (action.type) {
     case 'GRID_DATA_FETCH_REQUESTED': {
       return { ...state, hasConnectionWarning: false, isLoadingGrid: true };
+    }
+
+    case 'DATACENTER_STEP': {
+      return {...state, pewpewlines: action.payload};
     }
 
     case 'GRID_DATA_FETCH_SUCCEEDED': {

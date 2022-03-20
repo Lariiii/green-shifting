@@ -1,30 +1,42 @@
-import React from 'react';
-import { io } from "socket.io-client";
+import React, {useState} from 'react';
+import {io} from "socket.io-client";
+import {useSelector, useDispatch,} from "react-redux";
 
-export const DatacenterLoader = ({}) => {
+export function DatacenterLoader() {
+    let [hasConnected, setHasConnected] = useState(false)
+    const dcs = useSelector(state => state.data.dataCenters)
 
-    const socket = io("ws://127.0.0.1:5000", {
-        transports: ["websocket"],
-        withCredentials: true,
-        path: "/socket.io"
-    });
+    if (!hasConnected) {
+        const dispatch = useDispatch()
+        const socket = io("ws://127.0.0.1:5000", {
+            transports: ["websocket"],
+            withCredentials: true,
+            path: "/socket.io"
+        });
 
-    console.log("Rendering Custom Socket IO 7!")
+        console.log("Rendering Custom Socket IO 8!")
+        setHasConnected(true)
+        socket.on("connect", () => {
+            console.log("connected")
+            console.log(dcs)
+            for (var i = 0; i < dcs.length; i++) {
+                socket.emit("create_datacenters", dcs[i]);
+            }
 
-    socket.on("connect", () => {
-        console.log("connect")
-        var example_datacenter_1 = {"name": "DC 1",
-                        "company": "vmware",
-                        "longitude": 55.2321664,
-                        "latitude": 9.5155424,
-                        "windpower_kwh": 2000,
-                        "solarpower_kwh": 2000,
-                        "datacenter_vm_count_0": 2000}
-        socket.emit("create_datacenters", example_datacenter_1);
-    });
+            // Start Data Stream
+            socket.emit("begin_datastream")
 
-    return <div>
-        YEP
-    </div>
+            // Add Pew Pew
+            socket.on("step_data", async (step_data) => {
+                const shifts = step_data["shifts"]
+                console.log(shifts)
+                if (shifts.length > 0) {
+                    dispatch({type: "DATACENTER_STEP", payload: {shifts}})
+                }
 
+            })
+        });
+    }
+
+    return <div/>
 }

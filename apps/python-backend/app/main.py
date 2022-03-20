@@ -27,10 +27,13 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 datacenters: list[Datacenter] = []
 data_points_length = 0
+index = 0
 
 
 @socketio.event
 def create_datacenters(datacenter_json):
+    print(datacenter_json)
+
     # JSON Format
     example_json = {"name": "",
                     "company": "",
@@ -64,52 +67,58 @@ def create_datacenters(datacenter_json):
 
 @socketio.event
 def begin_datastream():
-    global datacenters, data_points_length
+    global datacenters, data_points_length, index
 
     def get_total_vm_cap(datacenter_obj, index):
         VM_KWH_CONSUMPTION = 1
         wind_kwh = datacenter_obj.windpower_kwh * datacenter_obj.environment[index].wind_efficiency
         solar_kwh = datacenter_obj.solarpower_kwh * datacenter_obj.environment[index].solar_efficiency
 
+        print("{}: S: {} => {}, W: {} => {}".format(datacenter_obj.name,
+                                                    solar_kwh,
+                                                    datacenter_obj.environment[index].solar_efficiency,
+                                                    wind_kwh,
+                                                    datacenter_obj.environment[index].wind_efficiency))
+
         return math.floor((wind_kwh + solar_kwh) / VM_KWH_CONSUMPTION)
 
-    for i in range(data_points_length - 3):
-        time.sleep(1)
-        timestamp = unix_timestamp_to_datetime_str(datacenters[0].environment[i].unix_timestamp)
-        print("\n--- New Hour {} ---".format(timestamp))
+    timestamp = unix_timestamp_to_datetime_str(datacenters[0].environment[index].unix_timestamp)
+    time.sleep(1)
+    print("\n--- New Hour {} ---".format(timestamp))
 
-        # Prep the data objects
-        algo_input = []
-        for datacenter in datacenters:
-            prepped_datacenter = copy.deepcopy(datacenter)
-            prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, i + 0)
-            prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, i + 1)
-            prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, i + 2)
-            print(prepped_datacenter)
-            algo_input.append(prepped_datacenter)
+    # Prep the data objects
+    algo_input = []
+    for datacenter in datacenters:
+        prepped_datacenter = copy.deepcopy(datacenter)
+        prepped_datacenter.datacenter_vm_count_1 = get_total_vm_cap(prepped_datacenter, index + 0)
+        prepped_datacenter.datacenter_vm_count_2 = get_total_vm_cap(prepped_datacenter, index + 1)
+        prepped_datacenter.datacenter_vm_count_3 = get_total_vm_cap(prepped_datacenter, index + 2)
+        print(prepped_datacenter)
+        algo_input.append(prepped_datacenter)
 
-        # Call Algo
-        result = shift(algo_input)
+    # Call Algo
+    result = shift(algo_input)
 
-        # Integrate back into out DB
-        shift_dictionary = result[0]
-        changed_dcs = result[1]
+    # Integrate back into out DB
+    shift_dictionary = result[0]
+    changed_dcs = result[1]
 
-        # Don't Blame me for my nice code :D
-        for changed_dc in changed_dcs:
-            for real_dc in datacenters:
-                if changed_dc.name == real_dc.name:
-                    real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
+    # Don't Blame me for my nice code :D
+    for changed_dc in changed_dcs:
+        for real_dc in datacenters:
+            if changed_dc.name == real_dc.name:
+                real_dc.datacenter_vm_count_0 = changed_dc.datacenter_vm_count_0
 
-        # Create JSON to send
-        to_send_json = {"shifts": [], "datacenters": {}}
-        for shift_tuple, value in shift_dictionary.items():
-            to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
-            print("Shifted {} VMs from {} to {}".format(shift_tuple[0].name, shift_tuple[1].name, value))
-        for dc in datacenters:
-            to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
+    # Create JSON to send
+    to_send_json = {"shifts": [], "datacenters": {}}
+    for shift_tuple, value in shift_dictionary.items():
+        to_send_json["shifts"].append({"from": shift_tuple[0].name, "to": shift_tuple[1].name, "value": value})
+        print("Shifted {} VMs from {} to {}".format(shift_tuple[0].name, shift_tuple[1].name, value))
+    for dc in datacenters:
+        to_send_json["datacenters"][dc.name] = dc.datacenter_vm_count_0
 
-        emit('step_data', to_send_json)
+    index += 1
+    emit('step_data', to_send_json)
 
 
 if __name__ == "__main__":

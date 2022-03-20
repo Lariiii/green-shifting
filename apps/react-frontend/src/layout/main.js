@@ -162,7 +162,6 @@ return (
       {headerVisible && <Header/>}
       <div id="inner">
         <ErrorBoundary>
-          <DatacenterLoader/>
           <LoadingOverlay visible={showLoadingOverlay}/>
           <LeftPanel/>
           <MapContainer pathname={location.pathname} id="map-container">

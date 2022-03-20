@@ -62,7 +62,7 @@ export default ({ project, unproject }) => {
       for (var i=0; i < datacentersData.length; i++) {
 
         const dc = datacentersData[i];
-        const [ x, y ]= project([dc.lon, dc.lat]);
+        const [ x, y ]= project([dc.longitude, dc.latitude]);
 
         var img = new Image();
         img.onload = function() {
