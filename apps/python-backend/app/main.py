@@ -70,8 +70,9 @@ def begin_datastream():
         VM_KWH_CONSUMPTION = 1
         wind_kwh = datacenter_obj.windpower_kwh * datacenter_obj.environment[index].wind_efficiency
         solar_kwh = datacenter_obj.solarpower_kwh * datacenter_obj.environment[index].solar_efficiency
+        non_cooling_kwh = math.floor((wind_kwh+solar_kwh)/2.65)
 
-        return math.floor((wind_kwh + solar_kwh) / VM_KWH_CONSUMPTION)
+        return math.floor(non_cooling_kwh / VM_KWH_CONSUMPTION)
 
     for i in range(data_points_length - 3):
         time.sleep(1)
