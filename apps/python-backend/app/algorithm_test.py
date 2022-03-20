@@ -57,12 +57,12 @@ def shift(datacenters):
 
 
 def get_nearest_dc(dc, neighbors):
-    coords_1 = (dc.position.longitude, dc.position.latitude)
+    coords_1 = (dc.position.latitude, dc.position.longitude)
 
     nearest_dc = dc
     distance = -1
     for neighbor in neighbors:
-        coords_2 = (neighbor.position.longitude, neighbor.position.latitude)
+        coords_2 = (neighbor.position.latitude, neighbor.position.longitude)
         if geopy.distance.distance(coords_1, coords_2).km < distance or distance == -1:
             distance = geopy.distance.distance(coords_1, coords_2).km
             nearest_dc = neighbor
